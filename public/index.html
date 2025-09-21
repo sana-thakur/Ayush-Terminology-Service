@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ayush Terminology Service</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #2E7D32;
+      --secondary-color: #4CAF50;
+      --background-color: #f4f6f8;
+      --card-bg: #ffffff;
+      --text-color: #333;
+      --subtle-text: #666;
+    }
+    body { font-family: 'Roboto', sans-serif; background: var(--background-color); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    header { background: var(--primary-color); color: white; width: 100%; text-align: center; padding: 20px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    header h1 { margin: 0; font-weight: 500; }
+    main { width: 95%; max-width: 1200px; margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+    .search-panel, .problem-panel { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+    h2 { color: var(--primary-color); margin-top: 0; font-weight: 500; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
+    input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom: 15px; box-sizing: border-box; }
+    .results { list-style: none; padding: 0; margin: 0; flex-grow: 1; overflow-y: auto; max-height: calc(100vh - 300px); }
+    .result-item { background: #fafafa; margin-bottom: 10px; padding: 15px; border-radius: 8px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; }
+    .result-item:hover { background: #f0f0f0; border-color: var(--secondary-color); }
+    .term-info strong { font-size: 16px; color: var(--text-color); display: block; }
+    .term-info .namaste-term { font-size: 13px; color: var(--subtle-text); margin-top: 5px; font-style: italic; }
+    .codes { font-size: 12px; color: #555; display: flex; flex-direction: column; gap: 4px; margin-top: 8px; background: #e8f5e9; padding: 5px; border-radius: 4px; }
+    .codes span { font-family: monospace; }
+    button { background-color: var(--secondary-color); border: none; color: white; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background-color 0.2s; }
+    button:hover { background-color: #388E3C; }
+    button:disabled { background-color: #aaa; cursor: not-allowed; }
+    .problem-list { margin-top: 15px; }
+    .problem-item { display: flex; justify-content: space-between; align-items: center; font-size: 15px; margin-bottom: 8px; padding: 10px; background: #f9f9f9; border-radius: 6px; }
+    .problem-item button { background-color: #f44336; font-size: 12px; padding: 5px 10px; }
+    .upload-section { margin-top: 20px; text-align: center; }
+    pre { background: #2d2d2d; color: #ccc; padding: 15px; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word; font-size: 13px; max-height: 400px; overflow-y: auto; }
+    .pagination-controls { display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid #eee; margin-top: auto;}
+    .page-info { font-size: 14px; color: var(--subtle-text); }
+  .nav-links { margin-top: 10px; }
+  .nav-links a { color: white; text-decoration: none; margin: 0 15px; }
+  </style>
+</head>
+<body>
+  <header>
+      <h1>Ayush Terminology Service</h1>
+      <p>NAMASTE to ICD-11 Dual-Coding Demonstrator</p>
+      <div class="nav-links">
+          <a href="/">Search UI</a> | <a href="/api-playground.html">API Playground</a>
+      </div>
+  </header>
+  <main>
+    <div class="search-panel">
+      <h2>Search NAMASTE Terminology</h2>
+      <input type="text" id="searchInput" placeholder="Search by term or code (e.g., Migraine, A-2)...">
+      <ul class="results" id="resultsList"></ul>
+      <div class="pagination-controls">
+        <button id="prevButton" disabled>Previous</button>
+        <span class="page-info" id="pageInfo">Page 0 of 0</span>
+        <button id="nextButton" disabled>Next</button>
+      </div>
+    </div>
+    <div class="problem-panel">
+      <h2>Patient Problem List (FHIR Condition Resources)</h2>
+      <div class="problem-list" id="problemList"><p>No entries added yet.</p></div>
+      <div class="upload-section">
+        <button id="uploadButton">Create & Upload Encounter Bundle</button>
+      </div>
+      <h2>Generated FHIR Bundle</h2>
+      <pre id="fhirBundleOutput">{ "message": "FHIR Bundle will be shown here after clicking upload." }</pre>
+    </div>
+  </main>
+
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    const resultsList = document.getElementById('resultsList');
+    const problemListDiv = document.getElementById('problemList');
+    const uploadButton = document.getElementById('uploadButton');
+    const fhirBundleOutput = document.getElementById('fhirBundleOutput');
+    const prevButton = document.getElementById('prevButton');
+    const nextButton = document.getElementById('nextButton');
+    const pageInfo = document.getElementById('pageInfo');
+
+    let currentTerms = [];
+    let problemListItems = [];
+    let currentPage = 1;
+    let totalPages = 1;
+
+    async function fetchData(query = '', page = 1) {
+      try {
+        const res = await fetch(`/api/terminology/search?q=${query}&page=${page}`);
+        const data = await res.json();
+        currentTerms = data.results;
+        currentPage = data.pagination.currentPage;
+        totalPages = data.pagination.totalPages;
+        renderResults(currentTerms);
+        renderPagination(data.pagination);
+      } catch (e) {
+        console.error('Error fetching terms:', e);
+        resultsList.innerHTML = '<li>Error loading data. Is the server running?</li>';
+      }
+    }
+
+    function renderPagination(pagination) {
+        pageInfo.textContent = `Page ${pagination.currentPage} of ${pagination.totalPages} (${pagination.totalResults} results)`;
+        prevButton.disabled = pagination.currentPage <= 1;
+        nextButton.disabled = pagination.currentPage >= pagination.totalPages;
+    }
+
+    function renderResults(filteredTerms) {
+        resultsList.innerHTML = '';
+        const addedCodes = problemListItems.map(item => item.code.coding.find(c => c.system.includes('namaste')).code);
+
+        if (filteredTerms.length === 0 && searchInput.value) {
+            resultsList.innerHTML = '<li>No results found.</li>';
+            return;
+        }
+
+        filteredTerms.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'result-item';
+            const isAdded = addedCodes.includes(item.code);
+
+            const primaryDisplay = (item.icd11_biomed_display && item.icd11_biomed_display !== 'Not Mapped') 
+                                   ? item.icd11_biomed_display 
+                                   : (item.definition || item.term);
+
+            const subtextDisplay = (primaryDisplay !== item.term)
+                                   ? `<div class="namaste-term">${item.term}</div>`
+                                   : '';
+
+            li.innerHTML = `
+                <div class="term-info">
+                    <strong>${primaryDisplay} (${item.system})</strong>
+                    ${subtextDisplay}
+                    <div class="codes">
+                        <span>NAMASTE: ${item.code}</span>
+                        <span>TM2: ${item.icd11_tm2_code} (${item.icd11_tm2_display})</span>
+                        <span>Biomed: ${item.icd11_biomed_code} (${item.icd11_biomed_display})</span>
+                    </div>
+                </div>
+                <button data-code="${item.code}" ${isAdded ? 'disabled' : ''}>
+                    ${isAdded ? 'Added' : 'Add'}
+                </button>
+            `;
+
+            if (isAdded) li.classList.add('already-added');
+            resultsList.appendChild(li);
+        });
+    }
+    
+    function handleSearchInput() {
+        fetchData(searchInput.value.trim(), 1); // Always reset to page 1 on new search
+    }
+
+    // --- The rest of the script is largely the same ---
+    function createFhirCondition(item) {
+        return {
+            resourceType: "Condition",
+            id: `cond-${item.id}`,
+            meta: { versionId: "1", lastUpdated: new Date().toISOString(), extension: [{ url: "http://example.org/fhir/StructureDefinition/consent-id", valueString: "consent-12345" }] },
+            clinicalStatus: { coding: [{ system: "http://terminology.hl7.org/CodeSystem/condition-clinical", code: "active" }] },
+            verificationStatus: { coding: [{ system: "http://terminology.hl7.org/CodeSystem/condition-ver-status", code: "confirmed" }] },
+            code: {
+                text: item.term,
+                coding: [
+                    { system: "http://namaste.gov.in/CodeSystem/namaste-terms", code: item.code, display: item.term },
+                    { system: "http://id.who.int/icd/entity", code: item.icd11_biomed_code, display: item.icd11_biomed_display },
+                    { system: "http://id.who.int/icd/entity/tm", code: item.icd11_tm2_code, display: item.icd11_tm2_display }
+                ]
+            },
+            subject: { reference: "Patient/patient-123" }
+        };
+    }
+    function addToProblemList(item) {
+        const conditionResource = createFhirCondition(item);
+        problemListItems.push(conditionResource);
+        renderProblemList();
+        renderResults(currentTerms); // Re-render current view to update button states
+    }
+    function removeFromProblemList(conditionId) {
+        problemListItems = problemListItems.filter(item => item.id !== conditionId);
+        renderProblemList();
+        renderResults(currentTerms);
+    }
+    function renderProblemList() {
+        if (problemListItems.length === 0) {
+            problemListDiv.innerHTML = '<p>No entries added yet.</p>';
+            return;
+        }
+        problemListDiv.innerHTML = '';
+        problemListItems.forEach(condition => {
+            const div = document.createElement('div');
+            div.className = 'problem-item';
+            const namasteCoding = condition.code.coding.find(c => c.system.includes('namaste'));
+            const biomedCoding = condition.code.coding.find(c => c.system === 'http://id.who.int/icd/entity');
+            const primaryDisplay = (biomedCoding && biomedCoding.display !== 'Not Mapped') ? biomedCoding.display : namasteCoding.display;
+            div.innerHTML = `
+                <span>${primaryDisplay} [${namasteCoding.code}]</span>
+                <button onclick="removeFromProblemList('${condition.id}')">Remove</button>
+            `;
+            problemListDiv.appendChild(div);
+        });
+    }
+    async function uploadEncounter() {
+        if (problemListItems.length === 0) {
+            alert('Problem list is empty. Add at least one diagnosis.');
+            return;
+        }
+        const bundleId = `bundle-${Date.now()}`;
+        const patientId = "patient-123";
+        const practitionerId = "practitioner-456";
+        const encounterId = `enc-${Date.now()}`;
+        const fhirBundle = {
+            resourceType: 'Bundle', id: bundleId, type: 'transaction', timestamp: new Date().toISOString(), entry: []
+        };
+        fhirBundle.entry.push({
+            fullUrl: `Patient/${patientId}`,
+            resource: { resourceType: "Patient", id: patientId, name: [{ text: "Ramesh Kumar" }] },
+            request: { method: "PUT", url: `Patient/${patientId}` }
+        });
+        fhirBundle.entry.push({
+            fullUrl: `Encounter/${encounterId}`,
+            resource: {
+                resourceType: "Encounter", id: encounterId, status: "finished",
+                class: { system: "http://terminology.hl7.org/CodeSystem/v3-ActCode", code: "AMB" },
+                subject: { reference: `Patient/${patientId}` },
+                participant: [{ individual: { reference: `Practitioner/${practitionerId}` } }]
+            },
+            request: { method: "POST", url: "Encounter" }
+        });
+        problemListItems.forEach(condition => {
+            fhirBundle.entry.push({
+                fullUrl: `Condition/${condition.id}`, resource: condition, request: { method: "POST", url: "Condition" }
+            });
+        });
+        fhirBundleOutput.textContent = JSON.stringify(fhirBundle, null, 2);
+        try {
+            const response = await fetch('/api/fhir/Bundle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer mock-abha-token-12345' },
+                body: JSON.stringify(fhirBundle)
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert(`Upload successful! Audit ID: ${result.auditId}`);
+            } else {
+                throw new Error(result.error || 'Unknown error');
+            }
+        } catch (e) {
+            console.error('Upload failed:', e);
+            alert(`Upload failed: ${e.message}`);
+        }
+    }
+
+    // --- Event Listeners ---
+    searchInput.addEventListener('input', handleSearchInput);
+    
+    resultsList.addEventListener('click', (event) => {
+        if (event.target.tagName === 'BUTTON') {
+            const code = event.target.dataset.code;
+            const item = currentTerms.find(t => t.code === code);
+            if (item) {
+                addToProblemList(item);
+            }
+        }
+    });
+
+    uploadButton.addEventListener('click', uploadEncounter);
+
+    prevButton.addEventListener('click', () => {
+        if (currentPage > 1) {
+            fetchData(searchInput.value.trim(), currentPage - 1);
+        }
+    });
+
+    nextButton.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            fetchData(searchInput.value.trim(), currentPage + 1);
+        }
+    });
+
+    // Initial data load for the first page
+    fetchData();
+  </script>
+</body>
+</html>
