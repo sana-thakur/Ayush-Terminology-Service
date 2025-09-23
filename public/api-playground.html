@@ -3,60 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>API Playground - Ayush Terminology Service</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Source+Code+Pro&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary-color: #2E7D32;
-      --secondary-color: #4CAF50;
-      --background-color: #f4f6f8;
-      --card-bg: #ffffff;
-      --text-color: #333;
-      --subtle-text: #666;
-      --code-bg: #2d2d2d;
-      --code-text: #ccc;
-    }
-    body { font-family: 'Roboto', sans-serif; background: var(--background-color); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
-    header { background: var(--primary-color); color: white; width: 100%; text-align: center; padding: 20px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-    header h1 { margin: 0; font-weight: 500; }
-    main { width: 95%; max-width: 900px; margin: 30px auto; }
-    .api-endpoint-card { background: var(--card-bg); border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 30px; }
-    .card-header { background: #f9f9f9; border-bottom: 1px solid #eee; padding: 15px 20px; border-radius: 8px 8px 0 0; }
-    .card-header h3 { margin: 0; font-family: 'Source Code Pro', monospace; font-size: 18px; }
-    .card-header h3 .method { color: var(--primary-color); font-weight: 700; margin-right: 10px; }
-    .card-body { padding: 20px; }
-    .card-body p { color: var(--subtle-text); font-size: 14px; margin-top: 0; line-height: 1.6; }
-    .card-body ul { padding-left: 20px; }
-    .param-group { margin-bottom: 15px; }
-    label { display: block; font-weight: 500; margin-bottom: 5px; font-size: 14px; }
-    input[type="text"], textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; font-family: 'Source Code Pro', monospace; }
-    textarea { min-height: 200px; resize: vertical; }
-    button { background-color: var(--secondary-color); border: none; color: white; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background-color 0.2s; margin-top: 10px; }
-    button:hover { background-color: #388E3C; }
-    .output-section { margin-top: 20px; }
-    .output-section h4 { font-weight: 500; color: var(--text-color); border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
-    pre { background: var(--code-bg); color: var(--code-text); padding: 15px; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word; font-size: 13px; max-height: 400px; overflow-y: auto; font-family: 'Source Code Pro', monospace;}
-    .nav-links { margin-top: 10px; }
-    .nav-links a { color: white; text-decoration: none; margin: 0 15px; }
-    code { background-color: #e8f5e9; color: #388E3C; padding: 2px 4px; border-radius: 4px; font-family: 'Source Code Pro', monospace; }
-  </style>
+  <title>API Playground | FHDR Terminology Service</title>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <header>
-    <h1>API Playground & Documentation</h1>
-    <div class="nav-links">
-        <a href="/">Search UI</a> | <a href="/api-playground.html">API Playground</a>
-    </div>
+  <header class="app-header">
+    <a href="/" class="logo">FHDR <span>Terminology</span></a>
+    <nav class="nav-links">
+      <a href="/">Search UI</a>
+      <a href="/api-playground.html" class="active">API Playground</a>
+    </nav>
   </header>
-  <main>
 
-    <!-- NEW DOCUMENTATION SECTION -->
+  <main style="max-width: 900px;">
+    <!-- Documentation Section -->
     <div class="api-endpoint-card">
         <div class="card-header"><h3>Compliance with India's 2016 EHR Standards</h3></div>
         <div class="card-body">
             <p>This prototype demonstrates key principles required for compliance with the Ayushman Bharat Digital Mission (ABDM) and India's EHR Standards.</p>
             
-            <h4>OAuth 2.0–Secured Access using ABHA Tokens</h4>
+            <h4 style="margin-top: 1.5rem;">OAuth 2.0–Secured Access using ABHA Tokens</h4>
             <p>OAuth 2.0 is the standard security protocol for granting access to APIs. In ABDM, every patient has an ABHA (Ayushman Bharat Health Account).</p>
             <ul>
                 <li>When an EMR system wants to access patient data, it must authenticate using ABHA-linked credentials to obtain a secure OAuth 2.0 token.</li>
@@ -64,7 +30,7 @@
                 <li><strong>In this App:</strong> The <code>/api/fhir/Bundle</code> endpoint simulates this by requiring a Bearer token. While any token is accepted in this prototype, a real system would validate it against the ABDM gateway.</li>
             </ul>
 
-            <h4>Audit-Ready Metadata</h4>
+            <h4 style="margin-top: 1.5rem;">Audit-Ready Metadata</h4>
             <p>Every access to patient data must be traceable. “Audit-ready” means the system automatically records metadata for every transaction.</p>
             <ul>
                 <li><strong>Who:</strong> The identity of the doctor, hospital, or system accessing the data.</li>
@@ -90,12 +56,12 @@
           <label for="searchPage">Page</label>
           <input type="text" id="searchPage" value="1">
         </div>
-        <button id="searchBtn">Send Request</button>
-        <div class="output-section">
-          <h4>cURL Command</h4>
-          <pre><code id="searchCurl"></code></pre>
-          <h4>Response</h4>
-          <pre><code id="searchResponse"></code></pre>
+        <button id="searchBtn" class="btn btn-primary">Send Request</button>
+        <div class="output-section" style="margin-top: 1.5rem;">
+          <h4 style="font-weight: 600;">cURL Command</h4>
+          <pre id="searchCurl" style="margin-top: 0.5rem;"><code></code></pre>
+          <h4 style="font-weight: 600; margin-top: 1rem;">Response</h4>
+          <pre id="searchResponse" style="margin-top: 0.5rem;"><code></code></pre>
         </div>
       </div>
     </div>
@@ -113,12 +79,12 @@
           <label for="translateCode">Code</label>
           <input type="text" id="translateCode" value="A">
         </div>
-        <button id="translateBtn">Send Request</button>
-        <div class="output-section">
-          <h4>cURL Command</h4>
-          <pre><code id="translateCurl"></code></pre>
-          <h4>Response</h4>
-          <pre><code id="translateResponse"></code></pre>
+        <button id="translateBtn" class="btn btn-primary">Send Request</button>
+        <div class="output-section" style="margin-top: 1.5rem;">
+          <h4 style="font-weight: 600;">cURL Command</h4>
+          <pre id="translateCurl" style="margin-top: 0.5rem;"><code></code></pre>
+          <h4 style="font-weight: 600; margin-top: 1rem;">Response</h4>
+          <pre id="translateResponse" style="margin-top: 0.5rem;"><code></code></pre>
         </div>
       </div>
     </div>
@@ -136,12 +102,12 @@
           <label for="bundleBody">Request Body (FHIR Bundle)</label>
           <textarea id="bundleBody"></textarea>
         </div>
-        <button id="bundleBtn">Send Request</button>
-        <div class="output-section">
-          <h4>cURL Command</h4>
-          <pre><code id="bundleCurl"></code></pre>
-          <h4>Response</h4>
-          <pre><code id="bundleResponse"></code></pre>
+        <button id="bundleBtn" class="btn btn-primary">Send Request</button>
+        <div class="output-section" style="margin-top: 1.5rem;">
+          <h4 style="font-weight: 600;">cURL Command</h4>
+          <pre id="bundleCurl" style="margin-top: 0.5rem;"><code></code></pre>
+          <h4 style="font-weight: 600; margin-top: 1rem;">Response</h4>
+          <pre id="bundleResponse" style="margin-top: 0.5rem;"><code></code></pre>
         </div>
       </div>
     </div>
@@ -157,101 +123,8 @@
           </ul>
         </div>
       </div>
-
   </main>
 
-  <script>
-    // --- Helper to display results ---
-    function displayResult(elementId, content, isJson = true) {
-      const element = document.getElementById(elementId);
-      if (isJson) {
-        element.textContent = JSON.stringify(content, null, 2);
-      } else {
-        element.textContent = content;
-      }
-    }
-
-    // --- Search Endpoint Logic ---
-    const searchBtn = document.getElementById('searchBtn');
-    searchBtn.addEventListener('click', async () => {
-      const query = document.getElementById('searchQuery').value;
-      const page = document.getElementById('searchPage').value;
-      const url = new URL(`${window.location.origin}/api/terminology/search`);
-      if(query) url.searchParams.append('q', query);
-      if(page) url.searchParams.append('page', page);
-
-      displayResult('searchCurl', `curl -X GET "${url}"`, false);
-      displayResult('searchResponse', { message: "Loading..." });
-
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        displayResult('searchResponse', data);
-      } catch (e) {
-        displayResult('searchResponse', { error: e.message });
-      }
-    });
-
-    // --- Translate Endpoint Logic ---
-    const translateBtn = document.getElementById('translateBtn');
-    translateBtn.addEventListener('click', async () => {
-      const system = document.getElementById('translateSystem').value;
-      const code = document.getElementById('translateCode').value;
-      const url = new URL(`${window.location.origin}/api/terminology/ConceptMap/$translate`);
-      if(system) url.searchParams.append('system', system);
-      if(code) url.searchParams.append('code', code);
-      
-      displayResult('translateCurl', `curl -X GET "${url}"`, false);
-      displayResult('translateResponse', { message: "Loading..." });
-
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        displayResult('translateResponse', data);
-      } catch (e) {
-        displayResult('translateResponse', { error: e.message });
-      }
-    });
-    
-    // --- Bundle Endpoint Logic ---
-    const bundleBtn = document.getElementById('bundleBtn');
-    const bundleBody = document.getElementById('bundleBody');
-    // Pre-populate with an example
-    bundleBody.value = JSON.stringify({
-        resourceType: "Bundle",
-        id: "bundle-example-1",
-        type: "transaction",
-        entry: [{
-            fullUrl: "Patient/example",
-            resource: { resourceType: "Patient", id: "example" },
-            request: { method: "PUT", url: "Patient/example" }
-        }]
-    }, null, 2);
-    
-    bundleBtn.addEventListener('click', async () => {
-      const token = document.getElementById('bundleToken').value;
-      const body = bundleBody.value;
-      const url = `${window.location.origin}/api/fhir/Bundle`;
-
-      const curlCommand = `curl -X POST "${url}" \\\n  -H "Content-Type: application/json" \\\n  -H "Authorization: ${token}" \\\n  -d '${body}'`;
-      displayResult('bundleCurl', curlCommand, false);
-      displayResult('bundleResponse', { message: "Loading..." });
-      
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token
-          },
-          body: body
-        });
-        const data = await res.json();
-        displayResult('bundleResponse', data);
-      } catch (e) {
-        displayResult('bundleResponse', { error: e.message });
-      }
-    });
-  </script>
+  <script src="js/api-playground.js" defer></script>
 </body>
 </html>
