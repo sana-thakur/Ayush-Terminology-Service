@@ -33,7 +33,7 @@ The AYUSH Terminology Service is a robust Node.js application designed to manage
 
 1.  **Clone the repository:**
     ```bash
-    git clone [<repository-url>](https://github.com/shreyashi2609/Ayush-Terminology-Service.git)
+    git clone https://github.com/shreyashi2609/Ayush-Terminology-Service.git
     cd ayush-terminology-service
     ```
 
