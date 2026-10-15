@@ -12,6 +12,7 @@
     <nav class="nav-links">
       <a href="/">Search UI</a>
       <a href="/claims.html">Insurance Claims</a>
+      <a href="/researcher.html">Research Explorer</a>
       <a href="/admin.html">Admin Dashboard</a>
       <a href="/api-playground.html" class="active">API Playground</a>
     </nav>
@@ -340,14 +341,39 @@
       </div>
     </div>
 
-    <!-- Endpoint 11: FHIR Resources -->
+    <!-- Endpoint 11: Cross-Tradition TM2 Lookup -->
     <div class="api-endpoint-card">
-      <div class="card-header"><h3><span class="method">GET</span> FHIR Terminology Resources</h3></div>
+      <div class="card-header"><h3><span class="method">GET</span> /api/research/by-tm2-code</h3></div>
       <div class="card-body">
-        <p>Directly access the generated FHIR resources.</p>
+        <p>Retrieve all traditional medicine diagnoses across Ayurveda, Siddha, and Unani linked to an ICD-11 TM2 code.</p>
+        <div class="param-group">
+          <label for="researchTm2Code">ICD-11 TM2 Code (code)</label>
+          <input type="text" id="researchTm2Code" value="SF60">
+        </div>
+        <div class="param-group">
+          <label for="researchTokenInput">Researcher Bearer Token</label>
+          <input type="text" id="researchTokenInput" value="Bearer researcher-secret-dev-token-2026">
+        </div>
+        <button id="researchTm2Btn" class="btn btn-primary">Send Request</button>
+        <div class="output-section" style="margin-top: 1.5rem;">
+          <h4 style="font-weight: 600;">cURL Command</h4>
+          <pre id="researchTm2Curl" style="margin-top: 0.5rem;"><code></code></pre>
+          <h4 style="font-weight: 600; margin-top: 1rem;">Response</h4>
+          <pre id="researchTm2Response" style="margin-top: 0.5rem;"><code></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Endpoint 12: FHIR Resources -->
+    <div class="api-endpoint-card">
+      <div class="card-header"><h3><span class="method">GET</span> FHIR &amp; Research Terminology Resources</h3></div>
+      <div class="card-body">
+        <p>Directly access the generated FHIR and research export resources.</p>
         <ul>
           <li><a href="/api/terminology/CodeSystem" target="_blank">/api/terminology/CodeSystem</a></li>
           <li><a href="/api/terminology/ConceptMap" target="_blank">/api/terminology/ConceptMap</a></li>
+          <li><a href="/api/research/export?format=json&token=researcher-secret-dev-token-2026" target="_blank">/api/research/export?format=json</a></li>
+          <li><a href="/api/research/export?format=csv&token=researcher-secret-dev-token-2026" target="_blank">/api/research/export?format=csv</a></li>
           <li><a href="/api/admin/stats" target="_blank">/api/admin/stats (Requires Admin Auth)</a></li>
           <li><a href="/api/admin/claims-review-requests" target="_blank">/api/admin/claims-review-requests (Requires Admin Auth)</a></li>
         </ul>

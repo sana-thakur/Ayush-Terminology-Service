@@ -138,10 +138,33 @@ Base URL: `/api/fhir`
 
 *Note: The Bundle endpoint requires a mock authentication token (configured in `utils/authMiddleware.js`).*
 
+### Researcher Portal & Cohort Discovery Endpoints
+Base URL: `/api/research` *(Protected by Researcher Auth Middleware)*
+
+| Method | Endpoint | Description | Query / Headers |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/records` | Paginated cohort discovery with multi-parameter filtering. Excludes patient & claims data. | `system` (all, Ayurveda, Siddha, Unani), `q`, `tm2Code`, `biomedicalCode`, `mappingStatus`, `verificationStatus`, `page`, `limit` |
+| `GET` | `/by-tm2-code` | Cross-tradition exact TM2 code lookup retrieving all linked traditional diagnoses across all 3 traditions simultaneously. Distinctly handles valid-but-unmatched vs invalid codes without substring false-positives. | `code` (required), `system` (optional, default: `all`) |
+| `GET` | `/export` | Full dataset export streaming/returning all records matching active filters with proper `Content-Disposition` attachment headers. | `format` (`csv` or `json`), plus all filter parameters |
+
+#### Researcher Authentication
+All `/api/research/*` endpoints require authentication via:
+- `Authorization: Bearer <token>`
+- `X-Researcher-Token: <token>`
+- `X-Admin-Token: <token>`
+- Query parameter `?token=<token>` (for seamless direct browser file downloads)
+- **Development Default Token:** `researcher-secret-dev-token-2026` (or `admin-secret-dev-token-2026`)
+
+#### Research Data Protection & Formula Injection Mitigation
+* **Spreadsheet Formula Injection (CWE-1236) Protection**: All CSV cell values beginning with `=`, `+`, `-`, or `@` are automatically sanitized and escaped with an apostrophe prefix (`'`) to neutralize executable formula payloads in Microsoft Excel and Google Sheets.
+* **Double-Quote & Delimiter Escaping**: Values containing commas, double quotes, or line breaks are safely quoted and double-quoted.
+* **Data Isolation**: Strictly isolates clinical terminology mappings from patient identifiers, ABHA tokens, and claims review notes.
+
 ## 🛡️ Architecture & Data Persistence
 
 * **Separate Review Store (`data/mapping-reviews.json`)**: Administrator review metadata, approvals, flags, and audit history are isolated from `data/search-index.json` and `models/mappings.json`. Safe initialization and atomic write operations (`fs.renameSync`) guarantee that data is never lost or overwritten when running `npm run ingest`.
 * **Isolated Claims Review Store (`data/claims-review-requests.json`)**: Claims manual medical review requests are stored independently from raw terminology and admin mapping stores. Safe initialization and atomic writes ensure zero regressions to terminology or admin mappings.
+* **Unified Research Query Engine (`controllers/researchController.js`)**: Shared filtering logic powers both interactive table pagination and full dataset exports, guaranteeing that UI filters and exported datasets never diverge.
 * **Separation of Lifecycles**: Claim review lifecycle states (`pending_review`, `under_review`, `resolved`, `closed`) remain completely independent from clinical mapping verification states (`pending_review`, `verified`, `flagged`). Resolving an insurance claim review does not alter raw source mappings.
 * **Duplicate Open Review Prevention**: The claims engine rejects duplicate review requests (HTTP 409 Conflict) for the same claim reference and concept code while an earlier request remains in an active review state.
 * **Statutory Compliance & Regulatory Notice**: The Claims Workbench enforces the AYUSH insurance guideline: missing WHO ICD-11 crosswalks do not justify automated claim rejection; processors are guided to route them directly to manual medical review.
@@ -156,6 +179,7 @@ ayush-terminology-service/
 │   ├── adminController.js         # Healthcare Administrator request handlers
 │   ├── bundleController.js        # FHIR Bundle processor & audit logger
 │   ├── claimsController.js        # Insurance Claims resolution, search & review requests
+│   ├── researchController.js      # Unified query engine, TM2 crosswalk & dataset export
 │   └── terminologyController.js   # Terminology search, codeSystem, and ConceptMap
 ├── data/
 │   ├── audit-log.json             # Encounter & bundle audit trails
@@ -171,25 +195,30 @@ ayush-terminology-service/
 │   ├── api-playground.html        # Interactive API tester
 │   ├── claims.html                # Insurance Claims Processor Workbench UI
 │   ├── index.html                 # Clinician Terminology Search & Problem List UI
+│   ├── researcher.html            # Research Data Explorer & Cohort UI
 │   ├── css/styles.css             # Unified modern styles & design system
 │   └── js/
 │       ├── admin.js               # Admin dashboard & claims adjudication client logic
 │       ├── api-playground.js      # API playground client logic
 │       ├── claims.js              # Claims workbench client logic
+│       ├── researcher.js          # Researcher portal & dataset export client logic
 │       └── scripts.js             # Clinician UI client logic
 ├── routes/
 │   ├── adminRoutes.js             # /api/admin route definitions
 │   ├── bundleRoutes.js            # /api/fhir route definitions
 │   ├── claimsRoutes.js            # /api/claims route definitions
+│   ├── researchRoutes.js          # /api/research route definitions
 │   └── terminologyRoutes.js       # /api/terminology route definitions
 ├── scratch/
 │   ├── test-admin-endpoints.js    # Comprehensive administrator test suite
-│   └── test-claims-endpoints.js   # Comprehensive claims processor test suite
+│   ├── test-claims-endpoints.js   # Comprehensive claims processor test suite
+│   └── test-research-endpoints.js # Comprehensive researcher test suite
 ├── utils/
 │   ├── adminAuthMiddleware.js     # Dev-friendly admin auth middleware
 │   ├── authMiddleware.js          # Mock ABHA OAuth 2.0 token middleware
 │   ├── fhirGenerator.js           # FHIR CodeSystem & ConceptMap generator
-│   └── ingestData.js              # CSV & mapping data ingestion pipeline
+│   ├── ingestData.js              # CSV & mapping data ingestion pipeline
+│   └── researchAuthMiddleware.js  # Researcher token authentication middleware
 ├── server.js                      # Application entry point
 ├── package.json                   # Project metadata and scripts
 └── README.md                      # Project documentation

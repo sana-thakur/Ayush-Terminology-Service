@@ -299,4 +299,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // --- Research TM2 Crosswalk Endpoint Logic ---
+    const researchTm2Btn = document.getElementById('researchTm2Btn');
+    if (researchTm2Btn) {
+        researchTm2Btn.addEventListener('click', async () => {
+            const code = document.getElementById('researchTm2Code').value.trim();
+            const token = document.getElementById('researchTokenInput').value.trim();
+            const url = `${window.location.origin}/api/research/by-tm2-code?code=${encodeURIComponent(code)}`;
+
+            const curlCommand = `curl -X GET "${url}" \\\n  -H "Authorization: ${token}"`;
+            displayResult('researchTm2Curl', curlCommand, false);
+            displayResult('researchTm2Response', { message: "Loading..." });
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Authorization': token }
+                });
+                const data = await res.json();
+                displayResult('researchTm2Response', data);
+            } catch (e) {
+                displayResult('researchTm2Response', { error: e.message });
+            }
+        });
+    }
 });
