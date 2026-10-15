@@ -2,31 +2,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Helper to display results ---
     function displayResult(elementId, content, isJson = true) {
         const element = document.getElementById(elementId);
-        if(!element) return;
+        if (!element) return;
 
         let finalContent = content;
         if (isJson) {
             finalContent = JSON.stringify(content, null, 2);
         }
         
-        // Check if the target is a `code` element within a `pre`
         if (element.tagName === 'CODE' || element.tagName === 'PRE') {
             element.textContent = finalContent;
         } else {
-             // Fallback for other elements if needed
             element.innerHTML = finalContent;
         }
     }
 
     // --- Search Endpoint Logic ---
     const searchBtn = document.getElementById('searchBtn');
-    if(searchBtn) {
+    if (searchBtn) {
         searchBtn.addEventListener('click', async () => {
-            const query = document.getElementById('searchQuery').value;
-            const page = document.getElementById('searchPage').value;
+            const query = document.getElementById('searchQuery').value.trim();
+            const system = (document.getElementById('searchSystem') || {}).value || '';
+            const status = (document.getElementById('searchStatus') || {}).value || '';
+            const page = document.getElementById('searchPage').value.trim();
+
             const url = new URL(`${window.location.origin}/api/terminology/search`);
-            if(query) url.searchParams.append('q', query);
-            if(page) url.searchParams.append('page', page);
+            if (query) url.searchParams.append('q', query);
+            if (system && system !== 'all') url.searchParams.append('system', system);
+            if (status && status !== 'all') url.searchParams.append('status', status);
+            if (page) url.searchParams.append('page', page);
 
             displayResult('searchCurl', `curl -X GET "${url}"`, false);
             displayResult('searchResponse', { message: "Loading..." });
@@ -41,16 +44,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
     // --- Translate Endpoint Logic ---
     const translateBtn = document.getElementById('translateBtn');
-    if(translateBtn) {
+    if (translateBtn) {
         translateBtn.addEventListener('click', async () => {
             const system = document.getElementById('translateSystem').value;
             const code = document.getElementById('translateCode').value;
             const url = new URL(`${window.location.origin}/api/terminology/ConceptMap/$translate`);
-            if(system) url.searchParams.append('system', system);
-            if(code) url.searchParams.append('code', code);
+            if (system) url.searchParams.append('system', system);
+            if (code) url.searchParams.append('code', code);
             
             displayResult('translateCurl', `curl -X GET "${url}"`, false);
             displayResult('translateResponse', { message: "Loading..." });
@@ -67,9 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Bundle Endpoint Logic ---
     const bundleBtn = document.getElementById('bundleBtn');
-    if(bundleBtn) {
+    if (bundleBtn) {
         const bundleBody = document.getElementById('bundleBody');
-        // Pre-populate with an example
         bundleBody.value = JSON.stringify({
             resourceType: "Bundle",
             id: "bundle-example-1",
@@ -103,6 +104,122 @@ document.addEventListener('DOMContentLoaded', () => {
                 displayResult('bundleResponse', data);
             } catch (e) {
                 displayResult('bundleResponse', { error: e.message });
+            }
+        });
+    }
+
+    // --- Admin Details Endpoint Logic ---
+    const adminDetailsBtn = document.getElementById('adminDetailsBtn');
+    if (adminDetailsBtn) {
+        adminDetailsBtn.addEventListener('click', async () => {
+            const token = document.getElementById('adminDetailsToken').value.trim();
+            const system = document.getElementById('adminDetailsSystem').value.trim();
+            const id = document.getElementById('adminDetailsId').value.trim();
+            const url = `${window.location.origin}/api/admin/mappings/${encodeURIComponent(system)}/${encodeURIComponent(id)}`;
+
+            const curlCommand = `curl -X GET "${url}" \\\n  -H "Authorization: ${token}"`;
+            displayResult('adminDetailsCurl', curlCommand, false);
+            displayResult('adminDetailsResponse', { message: "Loading..." });
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Authorization': token }
+                });
+                const data = await res.json();
+                displayResult('adminDetailsResponse', data);
+            } catch (e) {
+                displayResult('adminDetailsResponse', { error: e.message });
+            }
+        });
+    }
+
+    // --- Admin Verify Endpoint Logic ---
+    const adminVerifyBtn = document.getElementById('adminVerifyBtn');
+    if (adminVerifyBtn) {
+        adminVerifyBtn.addEventListener('click', async () => {
+            const token = document.getElementById('adminVerifyToken').value.trim();
+            const system = document.getElementById('adminVerifySystem').value.trim();
+            const id = document.getElementById('adminVerifyId').value.trim();
+            const notes = document.getElementById('adminVerifyNotes').value.trim();
+            const url = `${window.location.origin}/api/admin/mappings/${encodeURIComponent(system)}/${encodeURIComponent(id)}/verify`;
+
+            const payload = { notes, reviewer: "admin" };
+            const curlCommand = `curl -X POST "${url}" \\\n  -H "Content-Type: application/json" \\\n  -H "Authorization: ${token}" \\\n  -d '${JSON.stringify(payload)}'`;
+            displayResult('adminVerifyCurl', curlCommand, false);
+            displayResult('adminVerifyResponse', { message: "Loading..." });
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                displayResult('adminVerifyResponse', data);
+            } catch (e) {
+                displayResult('adminVerifyResponse', { error: e.message });
+            }
+        });
+    }
+
+    // --- Admin Flag Endpoint Logic ---
+    const adminFlagBtn = document.getElementById('adminFlagBtn');
+    if (adminFlagBtn) {
+        adminFlagBtn.addEventListener('click', async () => {
+            const token = document.getElementById('adminFlagToken').value.trim();
+            const system = document.getElementById('adminFlagSystem').value.trim();
+            const id = document.getElementById('adminFlagId').value.trim();
+            const reasonCategory = document.getElementById('adminFlagCategory').value;
+            const description = document.getElementById('adminFlagDescription').value.trim();
+            const suggestion = document.getElementById('adminFlagSuggestion').value.trim();
+            const url = `${window.location.origin}/api/admin/mappings/${encodeURIComponent(system)}/${encodeURIComponent(id)}/flag`;
+
+            const payload = { reasonCategory, description, suggestion, reviewer: "admin" };
+            const curlCommand = `curl -X POST "${url}" \\\n  -H "Content-Type: application/json" \\\n  -H "Authorization: ${token}" \\\n  -d '${JSON.stringify(payload)}'`;
+            displayResult('adminFlagCurl', curlCommand, false);
+            displayResult('adminFlagResponse', { message: "Loading..." });
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                displayResult('adminFlagResponse', data);
+            } catch (e) {
+                displayResult('adminFlagResponse', { error: e.message });
+            }
+        });
+    }
+
+    // --- Admin History Endpoint Logic ---
+    const adminHistoryBtn = document.getElementById('adminHistoryBtn');
+    if (adminHistoryBtn) {
+        adminHistoryBtn.addEventListener('click', async () => {
+            const token = document.getElementById('adminHistoryToken').value.trim();
+            const system = document.getElementById('adminHistorySystem').value.trim();
+            const id = document.getElementById('adminHistoryId').value.trim();
+            const url = `${window.location.origin}/api/admin/mappings/${encodeURIComponent(system)}/${encodeURIComponent(id)}/history`;
+
+            const curlCommand = `curl -X GET "${url}" \\\n  -H "Authorization: ${token}"`;
+            displayResult('adminHistoryCurl', curlCommand, false);
+            displayResult('adminHistoryResponse', { message: "Loading..." });
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Authorization': token }
+                });
+                const data = await res.json();
+                displayResult('adminHistoryResponse', data);
+            } catch (e) {
+                displayResult('adminHistoryResponse', { error: e.message });
             }
         });
     }

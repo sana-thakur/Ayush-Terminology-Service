@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | AYUSH Terminology Service (NAMASTE)</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Global App Header -->
+  <header class="app-header">
+    <a href="/" class="logo">FHDR <span>Terminology</span></a>
+    <nav class="nav-links">
+      <a href="/">Search UI</a>
+      <a href="/admin.html" class="active">Admin Dashboard</a>
+      <a href="/api-playground.html">API Playground</a>
+    </nav>
+  </header>
+
+  <main style="max-width: 1440px;">
+    <!-- Admin Dev Auth Status & Token Banner -->
+    <div class="auth-status-bar">
+      <div class="auth-status-indicator">
+        <span class="status-dot-pulse" id="authPulse"></span>
+        <span>Administrator Session: <strong id="authStatusText">Active (Dev Token: admin-secret-dev-token-2026)</strong></span>
+      </div>
+      <button class="btn btn-secondary btn-sm" id="openAuthModalBtn" title="Configure Admin Dev Token">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 1a2 2 0 0 1 2 2v2H6V3a2 2 0 0 1 2-2zm3 4V3a3 3 0 1 0-6 0v2a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/>
+        </svg>
+        <span>Auth Token Settings</span>
+      </button>
+    </div>
+
+    <!-- Summary KPI Cards -->
+    <section class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span>Total Concepts</span>
+          <div class="stat-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3z"/></svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statTotal">--</div>
+        <div class="stat-subtext">Across Ayurveda, Siddha & Unani</div>
+      </div>
+
+      <div class="stat-card stat-verified">
+        <div class="stat-card-header">
+          <span>Verified Mappings</span>
+          <div class="stat-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statVerified">--</div>
+        <div class="stat-subtext">Approved by Administrator</div>
+      </div>
+
+      <div class="stat-card stat-flagged">
+        <div class="stat-card-header">
+          <span>Flagged Issues</span>
+          <div class="stat-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12.435 12.435 0 0 1-.397.15c-.264.095-.631.223-1.046.35-.828.252-1.92.52-3.26.52-1.34 0-2.432-.268-3.26-.52-.415-.127-.782-.255-1.046-.35a12.39 12.39 0 0 0-.42-.158L5 8.5v6.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 .28-.445.5.5 0 0 1 .534.072l.005.004.015.011a12.22 12.22 0 0 1 .465.344c.31.23.75.525 1.277.77C7.625 1.732 8.742 2 10 2c1.258 0 2.375-.268 3.424-.744.526-.245.966-.54 1.276-.77a12.235 12.235 0 0 1 .48-.355l.015-.01.004-.004.002-.002z"/></svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statFlagged">--</div>
+        <div class="stat-subtext">Requires Review or Correction</div>
+      </div>
+
+      <div class="stat-card stat-pending">
+        <div class="stat-card-header">
+          <span>Pending Review</span>
+          <div class="stat-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statPending">--</div>
+        <div class="stat-subtext">Mapped & Awaiting Verification</div>
+      </div>
+
+      <div class="stat-card stat-unmapped">
+        <div class="stat-card-header">
+          <span>Unmapped</span>
+          <div class="stat-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M4.646 4.646a.5.5 0 0 1 .708 0L11.354 10.646a.5.5 0 0 1-.708.708L4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>
+          </div>
+        </div>
+        <div class="stat-value" id="statUnmapped">--</div>
+        <div class="stat-subtext">No ICD-11 Matches Assigned</div>
+      </div>
+    </section>
+
+    <!-- Main Inspection Table & Controls Card -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h2 class="admin-card-title">
+          <svg class="panel-header-icon" style="margin-right: 0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+          <span>Mapping Inspection & Governance Table</span>
+        </h2>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-secondary btn-sm" id="refreshBtn" title="Reload Records">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
+            <span>Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters Toolbar -->
+      <div class="filter-controls-grid" style="margin-bottom: 1.5rem;">
+        <!-- Search Input -->
+        <div class="filter-field">
+          <label for="searchInput">Search Records</label>
+          <div class="search-bar" style="margin-bottom: 0;">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by term, NAMASTE code, TM2, Biomed, or definition...">
+          </div>
+        </div>
+
+        <!-- Tradition / System Filter -->
+        <div class="filter-field">
+          <label for="systemFilter">Tradition / System</label>
+          <select id="systemFilter" class="filter-select">
+            <option value="all">All Traditions (All)</option>
+            <option value="Ayurveda">Ayurveda</option>
+            <option value="Siddha">Siddha</option>
+            <option value="Unani">Unani</option>
+          </select>
+        </div>
+
+        <!-- Review Status Filter -->
+        <div class="filter-field">
+          <label for="statusFilter">Review Status</label>
+          <select id="statusFilter" class="filter-select">
+            <option value="all">All Review Statuses</option>
+            <option value="verified">Verified</option>
+            <option value="flagged">Flagged</option>
+            <option value="pending_review">Pending Review</option>
+            <option value="unmapped">Unmapped</option>
+          </select>
+        </div>
+
+        <!-- Page Size -->
+        <div class="filter-field">
+          <label for="limitSelect">Rows Per Page</label>
+          <select id="limitSelect" class="filter-select" style="min-width: 90px;">
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="filter-field">
+          <label>&nbsp;</label>
+          <button class="btn btn-secondary" id="resetFiltersBtn" title="Reset all filters">Reset</button>
+        </div>
+      </div>
+
+      <!-- Table Section -->
+      <div class="table-responsive">
+        <table class="admin-table" id="mappingsTable">
+          <thead>
+            <tr>
+              <th style="width: 100px;">System</th>
+              <th style="width: 50px;">ID</th>
+              <th style="width: 110px;">NAMASTE Code</th>
+              <th style="width: 180px;">Term</th>
+              <th>Definition</th>
+              <th style="width: 200px;">ICD-11 TM2 Code / Display</th>
+              <th style="width: 200px;">Biomedical Code / Display</th>
+              <th style="width: 130px;">Review Status</th>
+              <th style="width: 180px; text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="mappingsTableBody">
+            <!-- Dynamic rows will be inserted here -->
+            <tr>
+              <td colspan="9" style="text-align: center; padding: 3rem;">
+                <div class="empty-state" style="height: auto;">
+                  <p>Loading terminology records...</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Table Pagination Controls -->
+      <div class="pagination-controls" style="margin-top: 1.25rem;">
+        <button id="prevBtn" class="btn btn-secondary btn-sm" disabled>
+          &larr; Previous
+        </button>
+        <span class="page-info" id="paginationInfo">Page 1 of 1 (0 records)</span>
+        <button id="nextBtn" class="btn btn-secondary btn-sm" disabled>
+          Next &rarr;
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- =========================================================================
+       MODAL 1: VERIFICATION MODAL
+       ========================================================================= -->
+  <div class="modal-overlay" id="verifyModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#2e7d32" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
+          <span>Verify Terminology Mapping</span>
+        </h3>
+        <button class="modal-close-btn" data-close-modal="verifyModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="concept-preview-box">
+          <div class="preview-grid">
+            <div>
+              <div class="preview-label">Concept Term</div>
+              <div class="preview-value" id="verifyTermName">--</div>
+            </div>
+            <div>
+              <div class="preview-label">Tradition & ID</div>
+              <div class="preview-value" id="verifySystemId">--</div>
+            </div>
+            <div>
+              <div class="preview-label">NAMASTE Code</div>
+              <div class="preview-value" id="verifyCode" style="font-family: var(--font-family-code);">--</div>
+            </div>
+            <div>
+              <div class="preview-label">Mapping Version Fingerprint</div>
+              <div class="preview-value" id="verifyFingerprint" style="font-family: var(--font-family-code); font-size: 0.8rem;">--</div>
+            </div>
+            <div style="grid-column: span 2;">
+              <div class="preview-label">Assigned ICD-11 TM2</div>
+              <div class="preview-value" id="verifyTm2">--</div>
+            </div>
+            <div style="grid-column: span 2;">
+              <div class="preview-label">Assigned ICD-11 Biomedicine</div>
+              <div class="preview-value" id="verifyBiomed">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="param-group" style="margin-bottom: 1rem;">
+          <label for="verifyNotes">Verification Notes (Optional)</label>
+          <textarea id="verifyNotes" style="min-height: 90px;" placeholder="Add verification commentary, clinical validation reference, or audit notes..."></textarea>
+        </div>
+
+        <div class="param-group" style="margin-bottom: 0;">
+          <label for="verifyReviewer">Reviewer Identity</label>
+          <input type="text" id="verifyReviewer" value="admin" placeholder="Reviewer ABHA ID or username">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="verifyModal">Cancel</button>
+        <button class="btn btn-primary" id="confirmVerifyBtn" style="background-color: #2e7d32; border-color: #2e7d32;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/></svg>
+          <span>Approve & Mark Verified</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 2: FLAGGING MODAL
+       ========================================================================= -->
+  <div class="modal-overlay" id="flagModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#c62828" viewBox="0 0 16 16"><path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12.435 12.435 0 0 1-.397.15c-.264.095-.631.223-1.046.35-.828.252-1.92.52-3.26.52-1.34 0-2.432-.268-3.26-.52-.415-.127-.782-.255-1.046-.35a12.39 12.39 0 0 0-.42-.158L5 8.5v6.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 .28-.445.5.5 0 0 1 .534.072l.005.004.015.011a12.22 12.22 0 0 1 .465.344c.31.23.75.525 1.277.77C7.625 1.732 8.742 2 10 2c1.258 0 2.375-.268 3.424-.744.526-.245.966-.54 1.276-.77a12.235 12.235 0 0 1 .48-.355l.015-.01.004-.004.002-.002z"/></svg>
+          <span>Flag Mapping Issue</span>
+        </h3>
+        <button class="modal-close-btn" data-close-modal="flagModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="concept-preview-box">
+          <div class="preview-grid">
+            <div>
+              <div class="preview-label">Concept Term</div>
+              <div class="preview-value" id="flagTermName">--</div>
+            </div>
+            <div>
+              <div class="preview-label">Tradition & ID</div>
+              <div class="preview-value" id="flagSystemId">--</div>
+            </div>
+            <div>
+              <div class="preview-label">NAMASTE Code</div>
+              <div class="preview-value" id="flagCode" style="font-family: var(--font-family-code);">--</div>
+            </div>
+            <div>
+              <div class="preview-label">Current Status</div>
+              <div class="preview-value" id="flagCurrentStatus">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="param-group" style="margin-bottom: 1rem;">
+          <label for="flagReasonCategory">Reason Category <span style="color: var(--danger-color);">*</span></label>
+          <select id="flagReasonCategory" class="form-select">
+            <option value="incorrect_mapping">Incorrect ICD-11 Mapping</option>
+            <option value="missing_icd11_tm2_mapping">Missing ICD-11 TM2 Mapping</option>
+            <option value="missing_biomed_mapping">Missing Biomedical Mapping</option>
+            <option value="ambiguous_concept">Ambiguous Concept Definition</option>
+            <option value="outdated_terminology">Outdated Terminology</option>
+            <option value="other">Other Technical / Clinical Issue</option>
+          </select>
+        </div>
+
+        <div class="param-group" style="margin-bottom: 1rem;">
+          <label for="flagDescription">Issue Description <span style="color: var(--danger-color);">*</span></label>
+          <textarea id="flagDescription" style="min-height: 90px;" placeholder="Explain clearly why this mapping is incorrect, incomplete, or requires revision..."></textarea>
+        </div>
+
+        <div class="param-group" style="margin-bottom: 1rem;">
+          <label for="flagSuggestion">Proposed Correction / Suggested ICD-11 Code (Optional)</label>
+          <input type="text" id="flagSuggestion" placeholder="e.g., Suggest TM2 code SF60 or Biomedical code 123456789">
+        </div>
+
+        <div class="param-group" style="margin-bottom: 0;">
+          <label for="flagReviewer">Reviewer Identity</label>
+          <input type="text" id="flagReviewer" value="admin" placeholder="Reviewer ABHA ID or username">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="flagModal">Cancel</button>
+        <button class="btn btn-primary" id="confirmFlagBtn" style="background-color: #c62828; border-color: #c62828;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12.435 12.435 0 0 1-.397.15c-.264.095-.631.223-1.046.35-.828.252-1.92.52-3.26.52-1.34 0-2.432-.268-3.26-.52-.415-.127-.782-.255-1.046-.35a12.39 12.39 0 0 0-.42-.158L5 8.5v6.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 .28-.445.5.5 0 0 1 .534.072l.005.004.015.011a12.22 12.22 0 0 1 .465.344c.31.23.75.525 1.277.77C7.625 1.732 8.742 2 10 2c1.258 0 2.375-.268 3.424-.744.526-.245.966-.54 1.276-.77a12.235 12.235 0 0 1 .48-.355l.015-.01.004-.004.002-.002z"/></svg>
+          <span>Flag Mapping</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 3: AUDIT HISTORY TIMELINE MODAL
+       ========================================================================= -->
+  <div class="modal-overlay" id="historyModal">
+    <div class="modal-content" style="max-width: 650px;">
+      <div class="modal-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.714a6.958 6.958 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .974.605l-.568.835a6.974 6.974 0 0 0-.46-.3zm1.687 1.447c-.166-.076-.338-.147-.515-.213l.36-.934c.243.09.477.19.702.298l-.547.849zm1.08 1.487c-.085-.148-.178-.291-.277-.431l.833-.572c.135.197.26.4.375.608l-.931.395zm.575 1.782a6.98 6.98 0 0 0-.082-.555l.985-.213c.048.225.085.454.111.685l-1.014.083zm.186 1.956c.003-.189 0-.378-.008-.567l1-.044c.01.242.013.486.009.73l-1.001-.119zm-.246 1.96c.047-.184.088-.37.123-.558l.983.218a7.994 7.994 0 0 1-.161.73l-.945-.39zm-.62 1.838c.088-.16.17-.324.246-.492l.913.435a8.038 8.038 0 0 1-.328.654l-.831-.597zm-1.01 1.62c.123-.135.24-.276.35-.422l.8.616a8.067 8.067 0 0 1-.468.564l-.682-.758zm-1.353 1.309c.15-.104.295-.214.434-.33l.66.777a8.053 8.053 0 0 1-.58.441l-.514-.888zm-1.635.918c.168-.07.331-.146.49-.228l.458.915a7.98 7.98 0 0 1-.655.305l-.293-.992zm-1.848.48c.178-.03.354-.067.527-.11l.245.987a8.04 8.04 0 0 1-.703.147l-.069-1.024zm-1.954.083c.184.004.368.003.551-.005l.044 1.018a7.98 7.98 0 0 1-.734.007l.139-1.02zm-1.956-.307c.18-.038.358-.083.533-.135l-.278-.978a7.02 7.02 0 0 0-.498.125l.243.988zm-1.837-.698c.163-.075.323-.157.479-.246l-.504-.884a7.054 7.054 0 0 0-.448.23l.473.9zm-1.618-1.066c.14-.11.275-.227.404-.351l-.7-.738a7.03 7.03 0 0 0-.377.327l.673.762zm-1.308-1.408c.112-.14.218-.285.318-.436l-.852-.555a6.993 6.993 0 0 0-.297.408l.831.583zm-.922-1.69a6.98 6.98 0 0 0-.214-.52l-.934.36c.08.209.169.414.267.614l.881-.454zm-.486-1.895a6.974 6.974 0 0 0-.097-.55l-.986.208c.038.225.084.447.138.665l.945-.323zm-.088-1.99a6.99 6.99 0 0 0 .02-.562l-1.002-.02c-.007.243-.004.487.009.73l.993-.148zm.307-1.956c.038-.18.083-.358.135-.533l-.978-.278a8.04 8.04 0 0 0-.18.711l1.023.1zm.698-1.837c.075-.163.157-.323.246-.479l-.884-.504a8.053 8.053 0 0 0-.328.638l.966.345zm1.066-1.618c.11-.14.227-.275.351-.404l-.738-.7a8.067 8.067 0 0 0-.469.54l.856.564zm1.408-1.308c.14-.112.285-.218.436-.318l-.555-.852a8.025 8.025 0 0 0-.583.424l.702.746zm1.69-.922c.174-.075.352-.143.534-.203l-.36-.934a7.98 7.98 0 0 0-.714.271l.54.866zm1.895-.486c.18-.035.362-.064.546-.087l-.123-1.01a8.04 8.04 0 0 0-.728.116l.305.981z"/><path d="M8.5 5.5a.5.5 0 0 0-1 0v3.362l-1.429 2.38a.5.5 0 1 0 .858.516l1.5-2.5A.5.5 0 0 0 8.5 9V5.5z"/></svg>
+          <span>Action & Audit History</span>
+        </h3>
+        <button class="modal-close-btn" data-close-modal="historyModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="concept-preview-box">
+          <div class="preview-grid">
+            <div>
+              <div class="preview-label">Concept Term</div>
+              <div class="preview-value" id="historyTermName">--</div>
+            </div>
+            <div>
+              <div class="preview-label">Tradition & ID</div>
+              <div class="preview-value" id="historySystemId">--</div>
+            </div>
+            <div>
+              <div class="preview-label">NAMASTE Code</div>
+              <div class="preview-value" id="historyCode" style="font-family: var(--font-family-code);">--</div>
+            </div>
+            <div>
+              <div class="preview-label">Composite Key</div>
+              <div class="preview-value" id="historyCompositeKey" style="font-family: var(--font-family-code);">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="historyTimelineContainer">
+          <!-- Timeline entries rendered here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="historyModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 4: DEV AUTH SETTINGS MODAL
+       ========================================================================= -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v2H6V3a2 2 0 0 1 2-2zm3 4V3a3 3 0 1 0-6 0v2a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/></svg>
+          <span>Admin Authentication Token</span>
+        </h3>
+        <button class="modal-close-btn" data-close-modal="authModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.9rem; color: var(--text-light); margin-top: 0;">
+          Administrative APIs (<code>/api/admin/*</code>) require an authorized administrator token. In development, use the pre-configured dev token below or your custom <code>ADMIN_TOKEN</code> environment variable.
+        </p>
+        <div class="param-group" style="margin-bottom: 0;">
+          <label for="adminTokenInput">Admin Bearer / Header Token</label>
+          <input type="text" id="adminTokenInput" value="admin-secret-dev-token-2026">
+          <small style="color: var(--text-light); display: block; margin-top: 0.4rem;">
+            Default dev token: <code>admin-secret-dev-token-2026</code>
+          </small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="resetAuthTokenBtn">Reset to Default</button>
+        <button class="btn btn-primary" id="saveAuthTokenBtn">Save & Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Toast Notifications Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/admin.js" defer></script>
+</body>
+</html>

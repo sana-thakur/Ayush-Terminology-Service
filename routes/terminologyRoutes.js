@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { searchTerm, getCodeSystem, getConceptMap, translateCode } = require('../controllers/terminologyController');
 
-// Autocomplete search endpoint
+// Autocomplete search endpoints
+router.get('/', searchTerm);
 router.get('/search', searchTerm);
 
 // FHIR Resource endpoints

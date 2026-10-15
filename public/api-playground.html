@@ -11,6 +11,7 @@
     <a href="/" class="logo">FHDR <span>Terminology</span></a>
     <nav class="nav-links">
       <a href="/">Search UI</a>
+      <a href="/admin.html">Admin Dashboard</a>
       <a href="/api-playground.html" class="active">API Playground</a>
     </nav>
   </header>
@@ -28,18 +29,18 @@
                 <li>When an EMR system wants to access patient data, it must authenticate using ABHA-linked credentials to obtain a secure OAuth 2.0 token.</li>
                 <li>This token must be used in API requests (e.g., <code>Authorization: Bearer &lt;token&gt;</code>).</li>
                 <li><strong>In this App:</strong> The <code>/api/fhir/Bundle</code> endpoint simulates this by requiring a Bearer token. While any token is accepted in this prototype, a real system would validate it against the ABDM gateway.</li>
+                <li><strong>Administrator Governance:</strong> The <code>/api/admin/*</code> endpoints enforce admin authentication via Bearer token (default dev token: <code>admin-secret-dev-token-2026</code>).</li>
             </ul>
 
-            <h4 style="margin-top: 1.5rem;">Audit-Ready Metadata</h4>
-            <p>Every access to patient data must be traceable. “Audit-ready” means the system automatically records metadata for every transaction.</p>
+            <h4 style="margin-top: 1.5rem;">Audit-Ready Metadata & Terminology Review Governance</h4>
+            <p>Every access to patient data and every administrative review must be traceable. “Audit-ready” means the system automatically records metadata for every transaction.</p>
             <ul>
-                <li><strong>Who:</strong> The identity of the doctor, hospital, or system accessing the data.</li>
-                <li><strong>When:</strong> The exact timestamp of the access.</li>
-                <li><strong>What:</strong> The specific data that was accessed (e.g., patient problem list).</li>
-                <li><strong>Why:</strong> The purpose of the access (e.g., treatment, insurance claim).</li>
-                <li><strong>Consent:</strong> A reference to the patient's consent artifact that allowed the action.</li>
+                <li><strong>Who:</strong> The identity of the reviewer, doctor, hospital, or system.</li>
+                <li><strong>When:</strong> The exact ISO 8601 timestamp of the action.</li>
+                <li><strong>What:</strong> The specific mapping state, fingerprint, or patient record accessed.</li>
+                <li><strong>Why:</strong> The review reason category, clinical verification notes, or encounter purpose.</li>
+                <li><strong>Version Binding:</strong> Verifications are bound to deterministic mapping fingerprints, flagging stale mappings if source data shifts.</li>
             </ul>
-            <p><strong>In this App:</strong> When you upload a bundle, check the server console and the <code>data/audit-log.json</code> file. You will see a detailed log entry created for the transaction, simulating a real audit trail.</p>
         </div>
     </div>
 
@@ -47,10 +48,18 @@
     <div class="api-endpoint-card">
       <div class="card-header"><h3><span class="method">GET</span> /api/terminology/search</h3></div>
       <div class="card-body">
-        <p>Search for terms by name or code. Supports pagination.</p>
+        <p>Search for terms by name or code with support for tradition and review status filtering and pagination.</p>
         <div class="param-group">
           <label for="searchQuery">Query (q)</label>
-          <input type="text" id="searchQuery" placeholder="e.g., jwara or A-1">
+          <input type="text" id="searchQuery" placeholder="e.g., jwara, A-1, or Pitham">
+        </div>
+        <div class="param-group">
+          <label for="searchSystem">Tradition (system)</label>
+          <input type="text" id="searchSystem" placeholder="e.g., all, Ayurveda, Siddha, or Unani" value="all">
+        </div>
+        <div class="param-group">
+          <label for="searchStatus">Review Status (status)</label>
+          <input type="text" id="searchStatus" placeholder="e.g., all, verified, flagged, pending_review, or unmapped" value="all">
         </div>
         <div class="param-group">
           <label for="searchPage">Page</label>
@@ -112,17 +121,149 @@
       </div>
     </div>
 
-    <!-- Endpoint 4: FHIR Resources -->
+    <!-- Endpoint 4: Admin Mapping Details -->
     <div class="api-endpoint-card">
-        <div class="card-header"><h3><span class="method">GET</span> FHIR Terminology Resources</h3></div>
-        <div class="card-body">
-          <p>Directly access the generated FHIR resources.</p>
-          <ul>
-            <li><a href="/api/terminology/CodeSystem" target="_blank">/api/terminology/CodeSystem</a></li>
-            <li><a href="/api/terminology/ConceptMap" target="_blank">/api/terminology/ConceptMap</a></li>
-          </ul>
+      <div class="card-header"><h3><span class="method">GET</span> /api/admin/mappings/:system/:id</h3></div>
+      <div class="card-body">
+        <p>Retrieve full terminology record, mapping details, completeness, review status, and review history. Requires admin auth.</p>
+        <div class="param-group">
+          <label for="adminDetailsToken">Admin Bearer Token</label>
+          <input type="text" id="adminDetailsToken" value="Bearer admin-secret-dev-token-2026">
+        </div>
+        <div class="param-group">
+          <label for="adminDetailsSystem">Tradition (system)</label>
+          <input type="text" id="adminDetailsSystem" value="Siddha">
+        </div>
+        <div class="param-group">
+          <label for="adminDetailsId">Record ID (id)</label>
+          <input type="text" id="adminDetailsId" value="2">
+        </div>
+        <button id="adminDetailsBtn" class="btn btn-primary">Send Request</button>
+        <div class="output-section" style="margin-top: 1.5rem;">
+          <h4 style="font-weight: 600;">cURL Command</h4>
+          <pre id="adminDetailsCurl" style="margin-top: 0.5rem;"><code></code></pre>
+          <h4 style="font-weight: 600; margin-top: 1rem;">Response</h4>
+          <pre id="adminDetailsResponse" style="margin-top: 0.5rem;"><code></code></pre>
         </div>
       </div>
+    </div>
+
+    <!-- Endpoint 5: Admin Verify Mapping -->
+    <div class="api-endpoint-card">
+      <div class="card-header"><h3><span class="method">POST</span> /api/admin/mappings/:system/:id/verify</h3></div>
+      <div class="card-body">
+        <p>Verify a mapped record with notes. Validates that record exists and has valid ICD-11 mapping. Requires admin auth.</p>
+        <div class="param-group">
+          <label for="adminVerifyToken">Admin Bearer Token</label>
+          <input type="text" id="adminVerifyToken" value="Bearer admin-secret-dev-token-2026">
+        </div>
+        <div class="param-group">
+          <label for="adminVerifySystem">Tradition (system)</label>
+          <input type="text" id="adminVerifySystem" value="Siddha">
+        </div>
+        <div class="param-group">
+          <label for="adminVerifyId">Record ID (id)</label>
+          <input type="text" id="adminVerifyId" value="2">
+        </div>
+        <div class="param-group">
+          <label for="adminVerifyNotes">Notes (optional)</label>
+          <input type="text" id="adminVerifyNotes" value="Verified clinical correlation with ICD-11 disorders of muscles">
+        </div>
+        <button id="adminVerifyBtn" class="btn btn-primary">Send Request</button>
+        <div class="output-section" style="margin-top: 1.5rem;">
+          <h4 style="font-weight: 600;">cURL Command</h4>
+          <pre id="adminVerifyCurl" style="margin-top: 0.5rem;"><code></code></pre>
+          <h4 style="font-weight: 600; margin-top: 1rem;">Response</h4>
+          <pre id="adminVerifyResponse" style="margin-top: 0.5rem;"><code></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Endpoint 6: Admin Flag Mapping -->
+    <div class="api-endpoint-card">
+      <div class="card-header"><h3><span class="method">POST</span> /api/admin/mappings/:system/:id/flag</h3></div>
+      <div class="card-body">
+        <p>Flag an incorrect or missing mapping with a reason category, description, and optional suggestion. Requires admin auth.</p>
+        <div class="param-group">
+          <label for="adminFlagToken">Admin Bearer Token</label>
+          <input type="text" id="adminFlagToken" value="Bearer admin-secret-dev-token-2026">
+        </div>
+        <div class="param-group">
+          <label for="adminFlagSystem">Tradition (system)</label>
+          <input type="text" id="adminFlagSystem" value="Ayurveda">
+        </div>
+        <div class="param-group">
+          <label for="adminFlagId">Record ID (id)</label>
+          <input type="text" id="adminFlagId" value="1">
+        </div>
+        <div class="param-group">
+          <label for="adminFlagCategory">Reason Category</label>
+          <select id="adminFlagCategory" class="filter-select">
+            <option value="missing_icd11_tm2_mapping">missing_icd11_tm2_mapping</option>
+            <option value="incorrect_mapping">incorrect_mapping</option>
+            <option value="missing_biomed_mapping">missing_biomed_mapping</option>
+            <option value="ambiguous_concept">ambiguous_concept</option>
+            <option value="outdated_terminology">outdated_terminology</option>
+            <option value="other">other</option>
+          </select>
+        </div>
+        <div class="param-group">
+          <label for="adminFlagDescription">Description</label>
+          <input type="text" id="adminFlagDescription" value="Missing dual-coding ICD-11 TM2 module 2 mapping for Amavata (Arthritis)">
+        </div>
+        <div class="param-group">
+          <label for="adminFlagSuggestion">Suggestion (optional)</label>
+          <input type="text" id="adminFlagSuggestion" value="Suggest mapping to rheumatoid arthritis equivalent">
+        </div>
+        <button id="adminFlagBtn" class="btn btn-primary">Send Request</button>
+        <div class="output-section" style="margin-top: 1.5rem;">
+          <h4 style="font-weight: 600;">cURL Command</h4>
+          <pre id="adminFlagCurl" style="margin-top: 0.5rem;"><code></code></pre>
+          <h4 style="font-weight: 600; margin-top: 1rem;">Response</h4>
+          <pre id="adminFlagResponse" style="margin-top: 0.5rem;"><code></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Endpoint 7: Admin Action History -->
+    <div class="api-endpoint-card">
+      <div class="card-header"><h3><span class="method">GET</span> /api/admin/mappings/:system/:id/history</h3></div>
+      <div class="card-body">
+        <p>Retrieve chronological audit log of actions taken on a mapping record. Requires admin auth.</p>
+        <div class="param-group">
+          <label for="adminHistoryToken">Admin Bearer Token</label>
+          <input type="text" id="adminHistoryToken" value="Bearer admin-secret-dev-token-2026">
+        </div>
+        <div class="param-group">
+          <label for="adminHistorySystem">Tradition (system)</label>
+          <input type="text" id="adminHistorySystem" value="Siddha">
+        </div>
+        <div class="param-group">
+          <label for="adminHistoryId">Record ID (id)</label>
+          <input type="text" id="adminHistoryId" value="2">
+        </div>
+        <button id="adminHistoryBtn" class="btn btn-primary">Send Request</button>
+        <div class="output-section" style="margin-top: 1.5rem;">
+          <h4 style="font-weight: 600;">cURL Command</h4>
+          <pre id="adminHistoryCurl" style="margin-top: 0.5rem;"><code></code></pre>
+          <h4 style="font-weight: 600; margin-top: 1rem;">Response</h4>
+          <pre id="adminHistoryResponse" style="margin-top: 0.5rem;"><code></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Endpoint 8: FHIR Resources -->
+    <div class="api-endpoint-card">
+      <div class="card-header"><h3><span class="method">GET</span> FHIR Terminology Resources</h3></div>
+      <div class="card-body">
+        <p>Directly access the generated FHIR resources.</p>
+        <ul>
+          <li><a href="/api/terminology/CodeSystem" target="_blank">/api/terminology/CodeSystem</a></li>
+          <li><a href="/api/terminology/ConceptMap" target="_blank">/api/terminology/ConceptMap</a></li>
+          <li><a href="/api/admin/stats" target="_blank">/api/admin/stats (Requires Admin Auth)</a></li>
+        </ul>
+      </div>
+    </div>
   </main>
 
   <script src="js/api-playground.js" defer></script>

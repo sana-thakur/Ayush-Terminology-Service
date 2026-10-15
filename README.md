@@ -83,31 +83,77 @@ Base URL: `/api/terminology`
 
 | Method | Endpoint | Description | Query Params |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/search` | Search for terms. | `q` (search query), `system` (optional filter: Ayurveda, Siddha, Unani) |
-| `GET` | `/CodeSystem` | Retrieve the FHIR CodeSystem for a specific system. | `system` (required: e.g., Ayurveda) |
-| `GET` | `/ConceptMap` | Retrieve the FHIR ConceptMap linking AYUSH terms to ICD-11. | `system` (required) |
+| `GET` | `/search` | Search for terms with multi-domain & review status filters. | `q` (query), `system` (Ayurveda, Siddha, Unani, all), `status` (verified, flagged, pending_review, unmapped, all), `page`, `limit` |
+| `GET` | `/CodeSystem` | Retrieve the FHIR CodeSystem for AYUSH systems. | None |
+| `GET` | `/ConceptMap` | Retrieve the FHIR ConceptMap linking AYUSH terms to ICD-11. | None |
 | `GET` | `/ConceptMap/$translate` | Translate a code to its ICD-11 equivalent. | `code` (required), `system` (required) |
+
+### Healthcare Administrator Endpoints
+Base URL: `/api/admin` *(Protected by Admin Auth Middleware)*
+
+| Method | Endpoint | Description | Headers / Body |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/stats` | Retrieve aggregate counts for total, verified, flagged, pending, and unmapped concepts. | `Authorization: Bearer <ADMIN_TOKEN>` |
+| `GET` | `/mappings/:system/:id` | Retrieve terminology record, mapping details, completeness, review status, and review history. | `Authorization: Bearer <ADMIN_TOKEN>` |
+| `POST` | `/mappings/:system/:id/verify` | Verify a mapping record with optional clinical audit notes. Rejects unmapped records. | `Body: { notes, reviewer }` |
+| `POST` | `/mappings/:system/:id/flag` | Flag an incorrect or missing mapping without altering source data. | `Body: { reasonCategory, description, suggestion, reviewer }` |
+| `GET` | `/mappings/:system/:id/history` | Retrieve chronological audit history for a record. | `Authorization: Bearer <ADMIN_TOKEN>` |
+
+#### Admin Authentication
+All `/api/admin/*` endpoints require administrative authentication via:
+- `Authorization: Bearer <token>` OR `X-Admin-Token: <token>`
+- **Development Default Token:** `admin-secret-dev-token-2026`
+- **Environment Variable:** `ADMIN_TOKEN` can be defined in your `.env` or system environment.
 
 ### FHIR Bundle Endpoints
 Base URL: `/api/fhir`
 
 | Method | Endpoint | Description | Body |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/Bundle` | Ingest a FHIR Bundle resource. | JSON body containing the FHIR Bundle |
+| `POST` | `/Bundle` | Ingest a FHIR transaction Bundle. | JSON body containing the FHIR Bundle |
 
 *Note: The Bundle endpoint requires a mock authentication token (configured in `utils/authMiddleware.js`).*
+
+## 🛡️ Architecture & Data Persistence
+
+* **Separate Review Store (`data/mapping-reviews.json`)**: Administrator review metadata, approvals, flags, and audit history are isolated from `data/search-index.json` and `models/mappings.json`. Safe initialization and atomic write operations (`fs.renameSync`) guarantee that data is never lost or overwritten when running `npm run ingest`.
+* **Stable Composite Keys**: Combines system and ID (e.g. `ayurveda-1`, `siddha-2`, `unani-1`) to prevent collision across traditions where numerical IDs overlap.
+* **Deterministic Version Fingerprinting**: Every verified mapping stores a SHA-256 fingerprint hash of its underlying data. If source CSV data or ICD-11 mappings change in a subsequent ingestion, stale verifications are automatically identified and flagged for re-review.
 
 ## 📂 Project Structure
 
 ```
 ayush-terminology-service/
-├── controllers/        # Request handlers (logic)
-├── data/               # Generated data files (search-index.json)
-├── models/             # Data models and static mappings
-├── public/             # Static frontend files
-├── routes/             # API route definitions
-├── utils/              # Helper scripts (ingestion, auth)
-├── server.js           # Application entry point
-├── package.json        # Project metadata and scripts
-└── README.md           # Project documentation
+├── controllers/
+│   ├── adminController.js         # Healthcare Administrator request handlers
+│   ├── bundleController.js        # FHIR Bundle processor & audit logger
+│   └── terminologyController.js   # Terminology search, codeSystem, and ConceptMap
+├── data/
+│   ├── audit-log.json             # Encounter & bundle audit trails
+│   ├── mapping-reviews.json       # Persistent review governance & audit logs
+│   └── search-index.json          # Consolidated searchable index (generated)
+├── models/
+│   ├── mappings.json              # Curated ICD-11 TM2 / Biomedical mappings
+│   └── reviewStore.js             # Atomic persistence, fingerprinting & status engine
+├── public/
+│   ├── admin.html                 # Healthcare Administrator Dashboard UI
+│   ├── api-playground.html        # Interactive API tester
+│   ├── index.html                 # Clinician Terminology Search & Problem List UI
+│   ├── css/styles.css             # Unified modern styles & design system
+│   └── js/
+│       ├── admin.js               # Admin dashboard client logic
+│       ├── api-playground.js      # API playground client logic
+│       └── scripts.js             # Clinician UI client logic
+├── routes/
+│   ├── adminRoutes.js             # /api/admin route definitions
+│   ├── bundleRoutes.js            # /api/fhir route definitions
+│   └── terminologyRoutes.js       # /api/terminology route definitions
+├── utils/
+│   ├── adminAuthMiddleware.js     # Dev-friendly admin auth middleware
+│   ├── authMiddleware.js          # Mock ABHA OAuth 2.0 token middleware
+│   ├── fhirGenerator.js           # FHIR CodeSystem & ConceptMap generator
+│   └── ingestData.js              # CSV & mapping data ingestion pipeline
+├── server.js                      # Application entry point
+├── package.json                   # Project metadata and scripts
+└── README.md                      # Project documentation
 ```
