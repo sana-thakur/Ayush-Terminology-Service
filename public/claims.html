@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Insurance Claims Workbench | AYUSH Terminology Service</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Global App Header -->
+  <header class="app-header">
+    <a href="/" class="logo">FHDR <span>Terminology</span></a>
+    <nav class="nav-links">
+      <a href="/">Search UI</a>
+      <a href="/claims.html" class="active">Insurance Claims</a>
+      <a href="/admin.html">Admin Dashboard</a>
+      <a href="/api-playground.html">API Playground</a>
+    </nav>
+  </header>
+
+  <main style="max-width: 1200px;">
+    <!-- Claims Adjudicator Session Status -->
+    <div class="auth-status-bar">
+      <div class="auth-status-indicator">
+        <span class="status-dot-pulse"></span>
+        <span>Claims Adjudication Session: <strong>Active (Auth Token: admin-secret-dev-token-2026)</strong></span>
+      </div>
+      <div style="font-size: 0.8rem; color: var(--text-light);">
+        ABDM & AYUSH Insurance Standard Compliance Mode
+      </div>
+    </div>
+
+    <!-- Page Title Header -->
+    <div style="margin-bottom: 1.5rem;">
+      <h1 style="font-size: 1.75rem; font-weight: 700; margin: 0 0 0.25rem 0; color: var(--text-color);">
+        Insurance Claims Processing Workbench
+      </h1>
+      <p style="margin: 0; color: var(--text-light); font-size: 0.95rem;">
+        Resolve AYUSH standardized diagnostic codes to WHO ICD-11 TM2 and Biomedical crosswalks for claim adjudication.
+      </p>
+    </div>
+
+    <!-- Section 1: Claim Lookup & Code Resolution Form -->
+    <div class="admin-card" style="margin-bottom: 1.5rem;">
+      <div class="admin-card-header">
+        <h2 class="admin-card-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/><path d="M4 4.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5z"/></svg>
+          <span>Claim Diagnosis Resolution Form</span>
+        </h2>
+        <!-- Search Type Mode Toggle -->
+        <div class="toggle-group" id="searchModeGroup">
+          <button type="button" class="toggle-btn active" data-mode="code" id="modeCodeBtn">By NAMASTE Code</button>
+          <button type="button" class="toggle-btn" data-mode="name" id="modeNameBtn">By Diagnosis Name</button>
+        </div>
+      </div>
+
+      <form id="claimLookupForm" onsubmit="return false;">
+        <div class="filter-controls-grid" style="grid-template-columns: 1.2fr 1fr 2fr auto auto; align-items: end;">
+          <!-- Claim Reference ID Input -->
+          <div class="filter-field">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label for="claimRefInput">Claim Reference ID</label>
+              <button type="button" id="genClaimRefBtn" style="background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 0.75rem; padding: 0;">Generate</button>
+            </div>
+            <input type="text" id="claimRefInput" placeholder="e.g., CLM-2026-98104" value="CLM-2026-98104">
+          </div>
+
+          <!-- Tradition System Dropdown -->
+          <div class="filter-field">
+            <label for="systemSelect">Tradition / System <span style="color: var(--danger-color);">*</span></label>
+            <select id="systemSelect" class="filter-select">
+              <option value="Siddha" selected>Siddha</option>
+              <option value="Ayurveda">Ayurveda</option>
+              <option value="Unani">Unani</option>
+            </select>
+          </div>
+
+          <!-- Code or Name Search Input -->
+          <div class="filter-field">
+            <label for="claimSearchInput" id="searchLabel">NAMASTE Diagnosis Code <span style="color: var(--danger-color);">*</span></label>
+            <div class="search-bar" style="margin-bottom: 0;">
+              <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              <input type="text" id="claimSearchInput" class="search-input" placeholder="e.g., SID-002, AYU-001, or NUMC-003" value="SID-002">
+            </div>
+          </div>
+
+          <!-- Resolve Button -->
+          <div class="filter-field">
+            <label>&nbsp;</label>
+            <button type="submit" class="btn btn-primary" id="resolveClaimBtn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M10.854 5.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 7.793l2.646-2.647a.5.5 0 0 1 .708 0z"/><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/></svg>
+              <span>Resolve Claim</span>
+            </button>
+          </div>
+
+          <!-- Clear Button -->
+          <div class="filter-field">
+            <label>&nbsp;</label>
+            <button type="button" class="btn btn-secondary" id="clearFormBtn">Clear</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Section 2: Ambiguity Candidates Panel (visible when searching by diagnosis name) -->
+    <div class="ambiguity-container" id="ambiguityContainer" style="display: none;">
+      <div class="ambiguity-header">
+        <div>
+          <h3 style="margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--text-color);">
+            Ambiguity Resolution: Select Exact Diagnosis
+          </h3>
+          <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-light);">
+            Multiple concepts match your query. Select the exact standardized record to adjudicate the claim.
+          </p>
+        </div>
+        <span class="badge" id="ambiguityCountBadge">0 matches</span>
+      </div>
+      <div id="ambiguityList">
+        <!-- Ambiguous matching cards inserted dynamically -->
+      </div>
+    </div>
+
+    <!-- Section 3: Resolution Results & Adjudication Panel -->
+    <div id="resolutionPanel" style="display: none;">
+      <!-- Outcome Banner (Color dynamically updated) -->
+      <div class="outcome-banner" id="outcomeBanner">
+        <div class="outcome-icon" id="outcomeIcon">
+          <!-- Icon injected by JS -->
+        </div>
+        <div style="flex-grow: 1;">
+          <h3 id="outcomeTitle">Resolution Outcome</h3>
+          <p id="outcomeDescription">Description of mapping status and adjudication guideline.</p>
+        </div>
+        <div id="outcomeBadgeContainer">
+          <!-- Badge injected by JS -->
+        </div>
+      </div>
+
+      <!-- Regulatory Compliance Notice Alert -->
+      <div class="regulatory-alert" id="regulatoryAlert">
+        <svg class="regulatory-alert-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+          <strong>Statutory Regulatory Notice:</strong> Under National AYUSH Insurance and India EHR Guidelines, the absence of an ICD-11 TM2 or Biomedical crosswalk does <em>not</em> justify automated claim denial. Standardized AYUSH diagnoses must be routed to manual medical review.
+        </div>
+      </div>
+
+      <!-- Two-Column Resolution Details Grid -->
+      <div class="claims-details-grid">
+        <!-- Left: Claim & Terminology Record -->
+        <div class="details-card">
+          <h3 class="details-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zm5.5 1.5v2a1 1 0 0 0 1 1h2l-3-3zM4.146 6.146a.5.5 0 0 0-.708.708L5.293 8.707l-1.855 1.853a.5.5 0 0 0 .708.708L6 9.414l1.854 1.854a.5.5 0 0 0 .708-.708L6.707 8.707l1.853-1.853a.5.5 0 0 0-.708-.708L6 8l-1.854-1.854z"/></svg>
+            <span>Claim & Terminology Details</span>
+          </h3>
+          <div class="details-row">
+            <span class="details-label">Claim Reference ID</span>
+            <span class="details-value" id="resClaimRef" style="font-family: var(--font-family-code);">--</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Tradition System</span>
+            <span class="details-value" id="resSystem">--</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">NAMASTE Code</span>
+            <span class="details-value" id="resCode" style="font-family: var(--font-family-code); color: var(--primary-color);">--</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Clinical Term</span>
+            <span class="details-value" id="resTerm">--</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Composite Record Key</span>
+            <span class="details-value" id="resCompositeKey" style="font-family: var(--font-family-code); font-size: 0.8rem;">--</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Admin Review Status</span>
+            <span class="details-value" id="resAdminStatus">--</span>
+          </div>
+          <div class="details-row" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+            <span class="details-label">Definition / Clinical Scope</span>
+            <span class="details-value" id="resDefinition" style="text-align: left; max-width: 100%; font-weight: normal; color: var(--text-light); font-size: 0.82rem; line-height: 1.4;">--</span>
+          </div>
+        </div>
+
+        <!-- Right: WHO ICD-11 Dual-Coding Crosswalk -->
+        <div class="details-card">
+          <h3 class="details-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm8.5 2a.5.5 0 0 0-1 0v3.5H4a.5.5 0 0 0 0 1h3.5V12a.5.5 0 0 0 1 0V8.5H12a.5.5 0 0 0 0-1H8.5V4z"/></svg>
+            <span>WHO ICD-11 Dual-Coding Crosswalk</span>
+          </h3>
+          <div class="details-row">
+            <span class="details-label">ICD-11 TM2 Code</span>
+            <span class="details-value" id="resTm2Code" style="font-family: var(--font-family-code);">--</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">ICD-11 TM2 Concept Display</span>
+            <span class="details-value" id="resTm2Display">--</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">ICD-11 Biomedical Code</span>
+            <span class="details-value" id="resBiomedCode" style="font-family: var(--font-family-code);">--</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">ICD-11 Biomedicine Display</span>
+            <span class="details-value" id="resBiomedDisplay">--</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Crosswalk Completeness</span>
+            <span class="details-value" id="resCompleteness">--</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Adjudication Outcome</span>
+            <span class="details-value" id="resOutcomeStatus">--</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Manual Review Required?</span>
+            <span class="details-value" id="resReviewRequired">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Toolbar -->
+      <div class="claims-action-toolbar">
+        <button class="btn btn-primary" id="openReviewRequestModalBtn" style="background-color: #c62828; border-color: #c62828;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12.435 12.435 0 0 1-.397.15c-.264.095-.631.223-1.046.35-.828.252-1.92.52-3.26.52-1.34 0-2.432-.268-3.26-.52-.415-.127-.782-.255-1.046-.35a12.39 12.39 0 0 0-.42-.158L5 8.5v6.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 .28-.445.5.5 0 0 1 .534.072l.005.004.015.011a12.22 12.22 0 0 1 .465.344c.31.23.75.525 1.277.77C7.625 1.732 8.742 2 10 2c1.258 0 2.375-.268 3.424-.744.526-.245.966-.54 1.276-.77a12.235 12.235 0 0 1 .48-.355l.015-.01.004-.004.002-.002z"/></svg>
+          <span>Flag for Manual Medical Review</span>
+        </button>
+
+        <button class="btn btn-secondary" id="copyDetailsBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
+          <span>Copy Adjudication Summary</span>
+        </button>
+
+        <button class="btn btn-secondary" id="exportJsonBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+          <span>Export JSON</span>
+        </button>
+
+        <button class="btn btn-secondary" id="resolveAnotherBtn" style="margin-left: auto;">
+          <span>Resolve Another Claim</span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- =========================================================================
+       MODAL: MANUAL MEDICAL REVIEW REQUEST SUBMISSION
+       ========================================================================= -->
+  <div class="modal-overlay" id="reviewRequestModal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#c62828" viewBox="0 0 16 16"><path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12.435 12.435 0 0 1-.397.15c-.264.095-.631.223-1.046.35-.828.252-1.92.52-3.26.52-1.34 0-2.432-.268-3.26-.52-.415-.127-.782-.255-1.046-.35a12.39 12.39 0 0 0-.42-.158L5 8.5v6.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 .28-.445.5.5 0 0 1 .534.072l.005.004.015.011a12.22 12.22 0 0 1 .465.344c.31.23.75.525 1.277.77C7.625 1.732 8.742 2 10 2c1.258 0 2.375-.268 3.424-.744.526-.245.966-.54 1.276-.77a12.235 12.235 0 0 1 .48-.355l.015-.01.004-.004.002-.002z"/></svg>
+          <span>Flag Claim for Manual Medical Review</span>
+        </h3>
+        <button class="modal-close-btn" data-close-modal="reviewRequestModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 0;">
+          Route this claim diagnosis to a Healthcare Administrator / Medical Adjudicator for individualized clinical validation.
+        </p>
+
+        <!-- Preview Box -->
+        <div class="concept-preview-box">
+          <div class="preview-grid">
+            <div>
+              <div class="preview-label">Claim Reference</div>
+              <div class="preview-value" id="reqClaimRef" style="font-family: var(--font-family-code);">--</div>
+            </div>
+            <div>
+              <div class="preview-label">Tradition System</div>
+              <div class="preview-value" id="reqSystem">--</div>
+            </div>
+            <div>
+              <div class="preview-label">NAMASTE Code</div>
+              <div class="preview-value" id="reqCode" style="font-family: var(--font-family-code);">--</div>
+            </div>
+            <div>
+              <div class="preview-label">Clinical Term</div>
+              <div class="preview-value" id="reqTerm">--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reason Category -->
+        <div class="param-group" style="margin-bottom: 1rem;">
+          <label for="reviewReasonSelect">Review Reason Category <span style="color: var(--danger-color);">*</span></label>
+          <select id="reviewReasonSelect" class="form-select">
+            <option value="tm2_mapping_missing">Missing ICD-11 TM2 Mapping</option>
+            <option value="biomedical_missing">Missing Biomedical Mapping</option>
+            <option value="inconsistent_mapping">Inconsistent or Ambiguous Mapping</option>
+            <option value="flagged_by_admin">Clinical Discrepancy Flagged by Admin</option>
+            <option value="other">Other Clinical Review Reason</option>
+          </select>
+        </div>
+
+        <!-- Notes -->
+        <div class="param-group" style="margin-bottom: 1rem;">
+          <label for="reviewNotes">Adjudicator Clinical Notes / Context</label>
+          <textarea id="reviewNotes" style="min-height: 90px;" placeholder="Provide details regarding the patient encounter, claimed benefit amount, or clinical necessity justification..."></textarea>
+        </div>
+
+        <!-- Reviewer Identity -->
+        <div class="param-group" style="margin-bottom: 0;">
+          <label for="reviewProcessorId">Adjudicator Identity</label>
+          <input type="text" id="reviewProcessorId" value="claims_processor" placeholder="Adjudicator ABHA ID or username">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="reviewRequestModal">Cancel</button>
+        <button class="btn btn-primary" id="submitReviewRequestBtn" style="background-color: #c62828; border-color: #c62828;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/></svg>
+          <span>Submit Review Request</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Toast Notifications Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/claims.js" defer></script>
+</body>
+</html>

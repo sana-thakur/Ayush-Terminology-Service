@@ -12,6 +12,7 @@
     <a href="/" class="logo">FHDR <span>Terminology</span></a>
     <nav class="nav-links">
       <a href="/">Search UI</a>
+      <a href="/claims.html">Insurance Claims</a>
       <a href="/admin.html" class="active">Admin Dashboard</a>
       <a href="/api-playground.html">API Playground</a>
     </nav>
@@ -90,110 +91,204 @@
       </div>
     </section>
 
-    <!-- Main Inspection Table & Controls Card -->
-    <div class="admin-card">
-      <div class="admin-card-header">
-        <h2 class="admin-card-title">
-          <svg class="panel-header-icon" style="margin-right: 0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-          <span>Mapping Inspection & Governance Table</span>
-        </h2>
-        <div style="display: flex; gap: 0.5rem;">
-          <button class="btn btn-secondary btn-sm" id="refreshBtn" title="Reload Records">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
-            <span>Refresh</span>
-          </button>
-        </div>
-      </div>
+    <!-- Tabs Navigation Bar -->
+    <div class="tabs-bar">
+      <button class="tab-nav-btn active" id="tabGovernanceBtn" data-tab="paneGovernance">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3z"/></svg>
+        <span>Terminology & Mapping Governance</span>
+      </button>
+      <button class="tab-nav-btn" id="tabClaimsBtn" data-tab="paneClaims">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/><path d="M4 4.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5z"/></svg>
+        <span>Claims Review Requests</span>
+        <span class="tab-badge" id="claimsPendingCountBadge">0</span>
+      </button>
+    </div>
 
-      <!-- Filters Toolbar -->
-      <div class="filter-controls-grid" style="margin-bottom: 1.5rem;">
-        <!-- Search Input -->
-        <div class="filter-field">
-          <label for="searchInput">Search Records</label>
-          <div class="search-bar" style="margin-bottom: 0;">
-            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-            <input type="text" id="searchInput" class="search-input" placeholder="Search by term, NAMASTE code, TM2, Biomed, or definition...">
+    <!-- TAB PANE 1: TERMINOLOGY & MAPPING GOVERNANCE -->
+    <div class="tab-pane" id="paneGovernance">
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <h2 class="admin-card-title">
+            <svg class="panel-header-icon" style="margin-right: 0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+            <span>Mapping Inspection & Governance Table</span>
+          </h2>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-secondary btn-sm" id="refreshBtn" title="Reload Records">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
+              <span>Refresh</span>
+            </button>
           </div>
         </div>
 
-        <!-- Tradition / System Filter -->
-        <div class="filter-field">
-          <label for="systemFilter">Tradition / System</label>
-          <select id="systemFilter" class="filter-select">
-            <option value="all">All Traditions (All)</option>
-            <option value="Ayurveda">Ayurveda</option>
-            <option value="Siddha">Siddha</option>
-            <option value="Unani">Unani</option>
-          </select>
+        <!-- Filters Toolbar -->
+        <div class="filter-controls-grid" style="margin-bottom: 1.5rem;">
+          <!-- Search Input -->
+          <div class="filter-field">
+            <label for="searchInput">Search Records</label>
+            <div class="search-bar" style="margin-bottom: 0;">
+              <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              <input type="text" id="searchInput" class="search-input" placeholder="Search by term, NAMASTE code, TM2, Biomed, or definition...">
+            </div>
+          </div>
+
+          <!-- Tradition / System Filter -->
+          <div class="filter-field">
+            <label for="systemFilter">Tradition / System</label>
+            <select id="systemFilter" class="filter-select">
+              <option value="all">All Traditions (All)</option>
+              <option value="Ayurveda">Ayurveda</option>
+              <option value="Siddha">Siddha</option>
+              <option value="Unani">Unani</option>
+            </select>
+          </div>
+
+          <!-- Review Status Filter -->
+          <div class="filter-field">
+            <label for="statusFilter">Review Status</label>
+            <select id="statusFilter" class="filter-select">
+              <option value="all">All Review Statuses</option>
+              <option value="verified">Verified</option>
+              <option value="flagged">Flagged</option>
+              <option value="pending_review">Pending Review</option>
+              <option value="unmapped">Unmapped</option>
+            </select>
+          </div>
+
+          <!-- Page Size -->
+          <div class="filter-field">
+            <label for="limitSelect">Rows Per Page</label>
+            <select id="limitSelect" class="filter-select" style="min-width: 90px;">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+
+          <!-- Reset Button -->
+          <div class="filter-field">
+            <label>&nbsp;</label>
+            <button class="btn btn-secondary" id="resetFiltersBtn" title="Reset all filters">Reset</button>
+          </div>
         </div>
 
-        <!-- Review Status Filter -->
-        <div class="filter-field">
-          <label for="statusFilter">Review Status</label>
-          <select id="statusFilter" class="filter-select">
-            <option value="all">All Review Statuses</option>
-            <option value="verified">Verified</option>
-            <option value="flagged">Flagged</option>
-            <option value="pending_review">Pending Review</option>
-            <option value="unmapped">Unmapped</option>
-          </select>
+        <!-- Table Section -->
+        <div class="table-responsive">
+          <table class="admin-table" id="mappingsTable">
+            <thead>
+              <tr>
+                <th style="width: 100px;">System</th>
+                <th style="width: 50px;">ID</th>
+                <th style="width: 110px;">NAMASTE Code</th>
+                <th style="width: 180px;">Term</th>
+                <th>Definition</th>
+                <th style="width: 200px;">ICD-11 TM2 Code / Display</th>
+                <th style="width: 200px;">Biomedical Code / Display</th>
+                <th style="width: 130px;">Review Status</th>
+                <th style="width: 180px; text-align: center;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="mappingsTableBody">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 3rem;">
+                  <div class="empty-state" style="height: auto;">
+                    <p>Loading terminology records...</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <!-- Page Size -->
-        <div class="filter-field">
-          <label for="limitSelect">Rows Per Page</label>
-          <select id="limitSelect" class="filter-select" style="min-width: 90px;">
-            <option value="10">10</option>
-            <option value="25" selected>25</option>
-            <option value="50">50</option>
-          </select>
-        </div>
-
-        <!-- Reset Button -->
-        <div class="filter-field">
-          <label>&nbsp;</label>
-          <button class="btn btn-secondary" id="resetFiltersBtn" title="Reset all filters">Reset</button>
+        <!-- Table Pagination Controls -->
+        <div class="pagination-controls" style="margin-top: 1.25rem;">
+          <button id="prevBtn" class="btn btn-secondary btn-sm" disabled>
+            &larr; Previous
+          </button>
+          <span class="page-info" id="paginationInfo">Page 1 of 1 (0 records)</span>
+          <button id="nextBtn" class="btn btn-secondary btn-sm" disabled>
+            Next &rarr;
+          </button>
         </div>
       </div>
+    </div>
 
-      <!-- Table Section -->
-      <div class="table-responsive">
-        <table class="admin-table" id="mappingsTable">
-          <thead>
-            <tr>
-              <th style="width: 100px;">System</th>
-              <th style="width: 50px;">ID</th>
-              <th style="width: 110px;">NAMASTE Code</th>
-              <th style="width: 180px;">Term</th>
-              <th>Definition</th>
-              <th style="width: 200px;">ICD-11 TM2 Code / Display</th>
-              <th style="width: 200px;">Biomedical Code / Display</th>
-              <th style="width: 130px;">Review Status</th>
-              <th style="width: 180px; text-align: center;">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="mappingsTableBody">
-            <!-- Dynamic rows will be inserted here -->
-            <tr>
-              <td colspan="9" style="text-align: center; padding: 3rem;">
-                <div class="empty-state" style="height: auto;">
-                  <p>Loading terminology records...</p>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <!-- TAB PANE 2: CLAIMS REVIEW REQUESTS -->
+    <div class="tab-pane hidden" id="paneClaims">
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <h2 class="admin-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/><path d="M4 4.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5z"/></svg>
+            <span>Claims Manual Medical Review Requests</span>
+          </h2>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-secondary btn-sm" id="refreshClaimsBtn" title="Reload Claims Requests">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
+              <span>Refresh Claims</span>
+            </button>
+          </div>
+        </div>
 
-      <!-- Table Pagination Controls -->
-      <div class="pagination-controls" style="margin-top: 1.25rem;">
-        <button id="prevBtn" class="btn btn-secondary btn-sm" disabled>
-          &larr; Previous
-        </button>
-        <span class="page-info" id="paginationInfo">Page 1 of 1 (0 records)</span>
-        <button id="nextBtn" class="btn btn-secondary btn-sm" disabled>
-          Next &rarr;
-        </button>
+        <!-- Claims Filter Bar -->
+        <div class="filter-controls-grid" style="margin-bottom: 1.5rem; grid-template-columns: 1fr 1fr 1.5fr auto;">
+          <div class="filter-field">
+            <label for="claimsStatusFilter">Review Status</label>
+            <select id="claimsStatusFilter" class="filter-select">
+              <option value="all">All Request Statuses</option>
+              <option value="pending_review" selected>Pending Review</option>
+              <option value="under_review">Under Review</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="claimsSystemFilter">Tradition</label>
+            <select id="claimsSystemFilter" class="filter-select">
+              <option value="all">All Traditions</option>
+              <option value="Ayurveda">Ayurveda</option>
+              <option value="Siddha">Siddha</option>
+              <option value="Unani">Unani</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="claimsRefFilter">Claim Reference</label>
+            <input type="text" id="claimsRefFilter" placeholder="Filter by claim reference...">
+          </div>
+
+          <div class="filter-field">
+            <label>&nbsp;</label>
+            <button class="btn btn-secondary" id="resetClaimsFiltersBtn">Reset</button>
+          </div>
+        </div>
+
+        <!-- Claims Requests Table -->
+        <div class="table-responsive">
+          <table class="admin-table" id="claimsRequestsTable">
+            <thead>
+              <tr>
+                <th style="width: 130px;">Request ID</th>
+                <th style="width: 140px;">Claim Reference</th>
+                <th style="width: 90px;">Tradition</th>
+                <th style="width: 110px;">Code</th>
+                <th style="width: 160px;">Diagnosis Term</th>
+                <th>Reason Category & Notes</th>
+                <th style="width: 120px;">Review Status</th>
+                <th style="width: 140px;">Submitted</th>
+                <th style="width: 120px; text-align: center;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="claimsRequestsTableBody">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 3rem;">
+                  <div class="empty-state" style="height: auto;">
+                    <p>Loading claims review requests...</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </main>
@@ -402,6 +497,92 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" id="resetAuthTokenBtn">Reset to Default</button>
         <button class="btn btn-primary" id="saveAuthTokenBtn">Save & Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 5: CLAIMS REVIEW REQUEST ADJUDICATION MODAL
+       ========================================================================= -->
+  <div class="modal-overlay" id="claimsAdjudicateModal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/><path d="M10.854 6.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 8.793l2.646-2.647a.5.5 0 0 1 .708 0z"/></svg>
+          <span>Adjudicate Claims Manual Review Request</span>
+        </h3>
+        <button class="modal-close-btn" data-close-modal="claimsAdjudicateModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Preview Box -->
+        <div class="concept-preview-box">
+          <div class="preview-grid">
+            <div>
+              <div class="preview-label">Request ID</div>
+              <div class="preview-value" id="adjRequestId" style="font-family: var(--font-family-code); font-size: 0.8rem;">--</div>
+            </div>
+            <div>
+              <div class="preview-label">Claim Reference</div>
+              <div class="preview-value" id="adjClaimRef" style="font-family: var(--font-family-code);">--</div>
+            </div>
+            <div>
+              <div class="preview-label">Tradition & Code</div>
+              <div class="preview-value" id="adjSystemCode">--</div>
+            </div>
+            <div>
+              <div class="preview-label">Clinical Term</div>
+              <div class="preview-value" id="adjTerm">--</div>
+            </div>
+            <div style="grid-column: span 2;">
+              <div class="preview-label">Processor Review Reason</div>
+              <div class="preview-value" id="adjReason">--</div>
+            </div>
+            <div style="grid-column: span 2;">
+              <div class="preview-label">Processor Notes</div>
+              <div class="preview-value" id="adjProcessorNotes" style="font-weight: normal; color: var(--text-light); font-size: 0.82rem;">--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Adjudication Status Update -->
+        <div class="param-group" style="margin-bottom: 1rem;">
+          <label for="adjStatusSelect">Update Request Status <span style="color: var(--danger-color);">*</span></label>
+          <select id="adjStatusSelect" class="form-select">
+            <option value="under_review">under_review (In Progress)</option>
+            <option value="resolved" selected>resolved (Adjudication Complete)</option>
+            <option value="closed">closed (Archived / Finalized)</option>
+          </select>
+        </div>
+
+        <!-- Resolution Decision Outcome -->
+        <div class="param-group" style="margin-bottom: 1rem;">
+          <label for="adjOutcomeSelect">Adjudication Decision Outcome <span style="color: var(--danger-color);">*</span></label>
+          <select id="adjOutcomeSelect" class="form-select">
+            <option value="approved_for_coverage">Approved for Insurance Coverage</option>
+            <option value="denied_medical_necessity">Denied (Lack of Medical Necessity)</option>
+            <option value="adjusted_benefit">Adjusted Benefit Level</option>
+            <option value="additional_info_requested">Additional Documentation Requested</option>
+          </select>
+        </div>
+
+        <!-- Resolution Adjudication Notes -->
+        <div class="param-group" style="margin-bottom: 1rem;">
+          <label for="adjResolutionNotes">Medical Adjudication Notes & Clinical Justification</label>
+          <textarea id="adjResolutionNotes" style="min-height: 80px;" placeholder="Document clinical crosswalk rationale, medical necessity findings, or coverage determination details..."></textarea>
+        </div>
+
+        <!-- Reviewer Identity -->
+        <div class="param-group" style="margin-bottom: 0;">
+          <label for="adjReviewer">Medical Reviewer Identity</label>
+          <input type="text" id="adjReviewer" value="admin" placeholder="Reviewer ABHA ID or username">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="claimsAdjudicateModal">Cancel</button>
+        <button class="btn btn-primary" id="saveAdjudicationBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/></svg>
+          <span>Save Adjudication</span>
+        </button>
       </div>
     </div>
   </div>

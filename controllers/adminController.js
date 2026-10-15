@@ -1,4 +1,5 @@
 const reviewStore = require('../models/reviewStore');
+const claimsStore = require('../models/claimsStore');
 const { findRecord, getAllRecords } = require('./terminologyController');
 
 /**
@@ -16,6 +17,53 @@ async function getAdminStats(req, res) {
   } catch (error) {
     console.error('[AdminController] Error retrieving stats:', error);
     res.status(500).json({ error: 'Failed to retrieve administrative statistics.' });
+  }
+}
+
+/**
+ * GET /api/admin/mappings
+ * List all mappings with admin verification status, completeness, and pagination/filtering
+ */
+async function getAllMappings(req, res) {
+  try {
+    const allRecords = getAllRecords();
+    const systemFilter = (req.query.system || '').toLowerCase();
+    const statusFilter = (req.query.status || '').toLowerCase();
+    const q = (req.query.q || '').toLowerCase();
+
+    let filtered = allRecords.map(record => {
+      const statusInfo = reviewStore.computeRecordStatus(record);
+      return {
+        ...record,
+        compositeKey: reviewStore.getRecordKey(record.system, record.id),
+        reviewStatus: statusInfo.status,
+        completeness: statusInfo.completeness,
+        isStale: statusInfo.isStale
+      };
+    });
+
+    if (systemFilter && systemFilter !== 'all') {
+      filtered = filtered.filter(r => r.system.toLowerCase() === systemFilter);
+    }
+    if (statusFilter && statusFilter !== 'all') {
+      filtered = filtered.filter(r => r.reviewStatus === statusFilter);
+    }
+    if (q) {
+      filtered = filtered.filter(r =>
+        (r.term && r.term.toLowerCase().includes(q)) ||
+        (r.code && r.code.toLowerCase().includes(q)) ||
+        (r.definition && r.definition.toLowerCase().includes(q))
+      );
+    }
+
+    res.json({
+      status: 'success',
+      total: filtered.length,
+      data: filtered
+    });
+  } catch (error) {
+    console.error('[AdminController] Error retrieving mappings:', error);
+    res.status(500).json({ error: 'Failed to retrieve mappings.' });
   }
 }
 
@@ -201,10 +249,64 @@ async function getMappingHistory(req, res) {
   }
 }
 
+/**
+ * GET /api/admin/claims-review-requests
+ * Retrieve insurance claims manual medical review requests
+ */
+async function getClaimsReviewRequests(req, res) {
+  try {
+    const { status, system, claimReference } = req.query;
+    const requests = claimsStore.getReviewRequests({ status, system, claimReference });
+    const stats = claimsStore.getClaimsStats();
+
+    res.json({
+      status: 'success',
+      total: requests.length,
+      stats,
+      requests
+    });
+  } catch (error) {
+    console.error('[AdminController] Error retrieving claims review requests:', error);
+    res.status(500).json({ error: 'Failed to retrieve claims review requests.' });
+  }
+}
+
+/**
+ * PATCH /api/admin/claims-review-requests/:id
+ * Update status and record adjudication resolution for a claim review request
+ */
+async function updateClaimsReviewRequest(req, res) {
+  try {
+    const { id } = req.params;
+    const { status, resolutionOutcome, resolutionNotes, reviewer } = req.body || {};
+
+    const reviewerName = (req.adminUser && req.adminUser.username) || reviewer || 'admin';
+
+    const updated = claimsStore.updateReviewRequest(id, {
+      status,
+      resolutionOutcome,
+      resolutionNotes,
+      reviewer: reviewerName
+    });
+
+    res.json({
+      status: 'success',
+      message: `Claims review request '${id}' updated successfully.`,
+      request: updated
+    });
+  } catch (error) {
+    console.error('[AdminController] Error updating claims review request:', error);
+    res.status(400).json({ error: error.message || 'Failed to update claims review request.' });
+  }
+}
+
 module.exports = {
   getAdminStats,
+  getAllMappings,
   getMappingRecord,
   verifyMapping,
   flagMapping,
-  getMappingHistory
+  getMappingHistory,
+  getClaimsReviewRequests,
+  updateClaimsReviewRequest
 };

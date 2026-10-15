@@ -650,6 +650,279 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // =========================================================================
+  // CLAIMS REVIEW REQUESTS TAB LOGIC
+  // =========================================================================
+  const tabGovernanceBtn = document.getElementById('tabGovernanceBtn');
+  const tabClaimsBtn = document.getElementById('tabClaimsBtn');
+  const paneGovernance = document.getElementById('paneGovernance');
+  const paneClaims = document.getElementById('paneClaims');
+  const claimsPendingCountBadge = document.getElementById('claimsPendingCountBadge');
+
+  const claimsStatusFilter = document.getElementById('claimsStatusFilter');
+  const claimsSystemFilter = document.getElementById('claimsSystemFilter');
+  const claimsRefFilter = document.getElementById('claimsRefFilter');
+  const resetClaimsFiltersBtn = document.getElementById('resetClaimsFiltersBtn');
+  const refreshClaimsBtn = document.getElementById('refreshClaimsBtn');
+  const claimsRequestsTableBody = document.getElementById('claimsRequestsTableBody');
+
+  // Adjudication Modal Elements
+  const claimsAdjudicateModal = document.getElementById('claimsAdjudicateModal');
+  const adjRequestId = document.getElementById('adjRequestId');
+  const adjClaimRef = document.getElementById('adjClaimRef');
+  const adjSystemCode = document.getElementById('adjSystemCode');
+  const adjTerm = document.getElementById('adjTerm');
+  const adjReason = document.getElementById('adjReason');
+  const adjProcessorNotes = document.getElementById('adjProcessorNotes');
+  const adjStatusSelect = document.getElementById('adjStatusSelect');
+  const adjOutcomeSelect = document.getElementById('adjOutcomeSelect');
+  const adjResolutionNotes = document.getElementById('adjResolutionNotes');
+  const adjReviewer = document.getElementById('adjReviewer');
+  const saveAdjudicationBtn = document.getElementById('saveAdjudicationBtn');
+
+  let currentClaimsRequests = [];
+  let activeClaimRequest = null;
+  let claimsDebounceTimer = null;
+
+  // Tab Switcher
+  if (tabGovernanceBtn && tabClaimsBtn) {
+    tabGovernanceBtn.addEventListener('click', () => {
+      tabGovernanceBtn.classList.add('active');
+      tabClaimsBtn.classList.remove('active');
+      paneGovernance.classList.remove('hidden');
+      paneClaims.classList.add('hidden');
+    });
+
+    tabClaimsBtn.addEventListener('click', () => {
+      tabClaimsBtn.classList.add('active');
+      tabGovernanceBtn.classList.remove('active');
+      paneClaims.classList.remove('hidden');
+      paneGovernance.classList.add('hidden');
+      fetchClaimsRequests();
+    });
+  }
+
+  // Fetch Claims Review Requests
+  async function fetchClaimsRequests() {
+    if (!claimsRequestsTableBody) return;
+
+    claimsRequestsTableBody.innerHTML = `
+      <tr>
+        <td colspan="9" style="text-align: center; padding: 2.5rem;">
+          <div class="empty-state" style="height: auto;">
+            <p>Loading claims review requests...</p>
+          </div>
+        </td>
+      </tr>
+    `;
+
+    try {
+      const status = claimsStatusFilter ? claimsStatusFilter.value : 'all';
+      const system = claimsSystemFilter ? claimsSystemFilter.value : 'all';
+      const claimRef = claimsRefFilter ? claimsRefFilter.value.trim() : '';
+
+      const queryParams = new URLSearchParams({ status, system, claimReference: claimRef });
+      const response = await fetch(`/api/admin/claims-review-requests?${queryParams.toString()}`, {
+        headers: getAuthHeaders()
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to load claims requests: HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      currentClaimsRequests = data.requests || [];
+      const stats = data.stats || {};
+
+      if (claimsPendingCountBadge) {
+        claimsPendingCountBadge.textContent = stats.pending_review || 0;
+      }
+
+      renderClaimsRequestsTable(currentClaimsRequests);
+    } catch (error) {
+      console.error('Error fetching claims requests:', error);
+      claimsRequestsTableBody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 2.5rem;">
+            <div class="empty-state" style="height: auto;">
+              <h3 style="color: var(--danger-color);">Error Loading Claims Requests</h3>
+              <p>${escapeHtml(error.message)}</p>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  // Render Claims Requests Table
+  function renderClaimsRequestsTable(requests) {
+    if (!requests || requests.length === 0) {
+      claimsRequestsTableBody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 3rem;">
+            <div class="empty-state" style="height: auto;">
+              <svg class="empty-state-icon" style="width: 48px; height: 48px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <h3>No Claims Review Requests</h3>
+              <p>There are no review requests matching the selected filter criteria.</p>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    claimsRequestsTableBody.innerHTML = '';
+
+    requests.forEach(req => {
+      const tr = document.createElement('tr');
+      const formattedDate = new Date(req.createdAt).toLocaleDateString() + ' ' + new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      let statusBadge = '<span class="badge badge-pending">Pending Review</span>';
+      if (req.status === 'under_review') {
+        statusBadge = '<span class="badge badge-pending" style="background:#e0f2fe; color:#0369a1; border-color:#bae6fd;">Under Review</span>';
+      } else if (req.status === 'resolved') {
+        statusBadge = '<span class="badge badge-verified">Resolved</span>';
+      } else if (req.status === 'closed') {
+        statusBadge = '<span class="badge badge-unmapped">Closed</span>';
+      }
+
+      const reasonDisplay = formatReasonCategory(req.reason);
+
+      tr.innerHTML = `
+        <td style="font-family: var(--font-family-code); font-size: 0.8rem; color: var(--primary-color);">${escapeHtml(req.id)}</td>
+        <td style="font-family: var(--font-family-code); font-weight: 600;">${escapeHtml(req.claimReference)}</td>
+        <td><span class="badge badge-${req.system.toLowerCase()}">${escapeHtml(req.system)}</span></td>
+        <td class="code-cell">${escapeHtml(req.code)}</td>
+        <td class="term-cell">${escapeHtml(req.term || 'N/A')}</td>
+        <td style="font-size: 0.82rem;">
+          <div style="font-weight: 600; color: #b91c1c;">${escapeHtml(reasonDisplay)}</div>
+          <div style="color: var(--text-light); margin-top: 2px;">${escapeHtml(req.notes || 'No notes provided')}</div>
+        </td>
+        <td>${statusBadge}</td>
+        <td style="font-size: 0.8rem; color: var(--text-light);">${formattedDate}</td>
+        <td style="text-align: center;">
+          <button class="btn btn-sm btn-primary" data-adjudicate-id="${escapeHtml(req.id)}">
+            Adjudicate
+          </button>
+        </td>
+      `;
+
+      claimsRequestsTableBody.appendChild(tr);
+    });
+
+    // Delegate Adjudicate button clicks
+    claimsRequestsTableBody.querySelectorAll('button[data-adjudicate-id]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const reqId = btn.dataset.adjudicateId;
+        const request = currentClaimsRequests.find(r => r.id === reqId);
+        if (request) {
+          openAdjudicateModal(request);
+        }
+      });
+    });
+  }
+
+  function formatReasonCategory(cat) {
+    if (!cat) return 'General Review';
+    return cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  // Open Adjudication Modal
+  function openAdjudicateModal(request) {
+    activeClaimRequest = request;
+    adjRequestId.textContent = request.id;
+    adjClaimRef.textContent = request.claimReference;
+    adjSystemCode.textContent = `${request.system} - ${request.code}`;
+    adjTerm.textContent = request.term || 'N/A';
+    adjReason.textContent = formatReasonCategory(request.reason);
+    adjProcessorNotes.textContent = request.notes || 'None';
+
+    adjStatusSelect.value = (request.status === 'pending_review') ? 'under_review' : request.status;
+    adjOutcomeSelect.value = (request.adjudication && request.adjudication.outcome) ? request.adjudication.outcome : 'approved_for_coverage';
+    adjResolutionNotes.value = (request.adjudication && request.adjudication.notes) ? request.adjudication.notes : '';
+    adjReviewer.value = 'admin';
+
+    claimsAdjudicateModal.classList.add('active');
+  }
+
+  // Save Adjudication Submission (PATCH /api/admin/claims-review-requests/:id)
+  if (saveAdjudicationBtn) {
+    saveAdjudicationBtn.addEventListener('click', async () => {
+      if (!activeClaimRequest) return;
+
+      const status = adjStatusSelect.value;
+      const resolutionOutcome = adjOutcomeSelect.value;
+      const resolutionNotes = adjResolutionNotes.value.trim();
+      const reviewer = adjReviewer.value.trim() || 'admin';
+
+      saveAdjudicationBtn.disabled = true;
+      saveAdjudicationBtn.textContent = 'Saving...';
+
+      try {
+        const response = await fetch(`/api/admin/claims-review-requests/${activeClaimRequest.id}`, {
+          method: 'PATCH',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            status,
+            resolutionOutcome,
+            resolutionNotes,
+            reviewer
+          })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || result.error || 'Failed to update review request');
+        }
+
+        showToast(`Claims review request '${activeClaimRequest.id}' updated to '${status}'!`, 'success');
+        closeAllModals();
+        fetchClaimsRequests();
+      } catch (error) {
+        console.error('Adjudication error:', error);
+        showToast(error.message, 'error');
+      } finally {
+        saveAdjudicationBtn.disabled = false;
+        saveAdjudicationBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/></svg>
+          <span>Save Adjudication</span>
+        `;
+      }
+    });
+  }
+
+  // Claims filter listeners
+  if (claimsStatusFilter) {
+    claimsStatusFilter.addEventListener('change', fetchClaimsRequests);
+  }
+  if (claimsSystemFilter) {
+    claimsSystemFilter.addEventListener('change', fetchClaimsRequests);
+  }
+  if (claimsRefFilter) {
+    claimsRefFilter.addEventListener('input', () => {
+      clearTimeout(claimsDebounceTimer);
+      claimsDebounceTimer = setTimeout(fetchClaimsRequests, 300);
+    });
+  }
+  if (resetClaimsFiltersBtn) {
+    resetClaimsFiltersBtn.addEventListener('click', () => {
+      if (claimsStatusFilter) claimsStatusFilter.value = 'all';
+      if (claimsSystemFilter) claimsSystemFilter.value = 'all';
+      if (claimsRefFilter) claimsRefFilter.value = '';
+      fetchClaimsRequests();
+      showToast('Claims filters reset to default', 'info');
+    });
+  }
+  if (refreshClaimsBtn) {
+    refreshClaimsBtn.addEventListener('click', () => {
+      fetchClaimsRequests();
+      showToast('Claims review requests refreshed', 'info');
+    });
+  }
+
+  // Initial fetch for pending claims badge
+  fetchClaimsRequests();
+
   // Simple HTML Escaper
   function escapeHtml(str) {
     if (!str) return '';

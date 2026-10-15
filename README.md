@@ -88,16 +88,37 @@ Base URL: `/api/terminology`
 | `GET` | `/ConceptMap` | Retrieve the FHIR ConceptMap linking AYUSH terms to ICD-11. | None |
 | `GET` | `/ConceptMap/$translate` | Translate a code to its ICD-11 equivalent. | `code` (required), `system` (required) |
 
+### Insurance Claims Processor Endpoints
+Base URL: `/api/claims`
+
+| Method | Endpoint | Description | Query / Body |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/resolve` | Exact code lookup within a tradition with explicit resolution outcome determination. | `system` (Ayurveda, Siddha, Unani), `code` (e.g. `SID-002`) |
+| `GET` | `/search` | Ambiguity resolution search by diagnosis name/term with resolution preview. | `q` (query), `system` (Ayurveda, Siddha, Unani, all), `page`, `limit` |
+| `POST` | `/review-requests` | Create a manual medical review request. Prevents duplicate open requests for the same claim reference and concept. | `Body: { claimReference, system, recordId, code, reason, notes, requestedBy }` |
+
+#### Explicit Resolution Outcomes
+* **`mapped`**: Both WHO ICD-11 TM2 and Biomedical crosswalks present, and clinically verified by an administrator.
+* **`unmapped`**: Recognized term, but ICD-11 TM2 is missing (`N/A`). Requires manual medical review.
+* **`partially_mapped`**: One crosswalk missing (e.g., TM2 present, Biomed missing).
+* **`unverified`**: Both crosswalks present, but administrator verification is pending.
+* **`flagged`**: Terminology mapping was flagged by an administrator with clinical remediation details.
+* **`invalid_code`**: Malformed or missing system/code query parameter.
+* **`unrecognized_code`**: Code not found within the specified medical tradition.
+
 ### Healthcare Administrator Endpoints
 Base URL: `/api/admin` *(Protected by Admin Auth Middleware)*
 
 | Method | Endpoint | Description | Headers / Body |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/stats` | Retrieve aggregate counts for total, verified, flagged, pending, and unmapped concepts. | `Authorization: Bearer <ADMIN_TOKEN>` |
+| `GET` | `/mappings` | List all mappings with status, completeness, and search filters. | `Authorization: Bearer <ADMIN_TOKEN>` |
 | `GET` | `/mappings/:system/:id` | Retrieve terminology record, mapping details, completeness, review status, and review history. | `Authorization: Bearer <ADMIN_TOKEN>` |
 | `POST` | `/mappings/:system/:id/verify` | Verify a mapping record with optional clinical audit notes. Rejects unmapped records. | `Body: { notes, reviewer }` |
 | `POST` | `/mappings/:system/:id/flag` | Flag an incorrect or missing mapping without altering source data. | `Body: { reasonCategory, description, suggestion, reviewer }` |
 | `GET` | `/mappings/:system/:id/history` | Retrieve chronological audit history for a record. | `Authorization: Bearer <ADMIN_TOKEN>` |
+| `GET` | `/claims-review-requests` | List and inspect pending insurance claims manual medical review requests with stats and filters. | `Authorization: Bearer <ADMIN_TOKEN>` |
+| `PATCH` | `/claims-review-requests/:id` | Update claim review status (`pending_review`, `under_review`, `resolved`, `closed`) and append adjudication notes. | `Body: { status, resolutionNotes, adjudicatedBy }` |
 
 #### Admin Authentication
 All `/api/admin/*` endpoints require administrative authentication via:
@@ -111,12 +132,19 @@ Base URL: `/api/fhir`
 | Method | Endpoint | Description | Body |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/Bundle` | Ingest a FHIR transaction Bundle. | JSON body containing the FHIR Bundle |
+| `GET` | `/CodeSystem` | Retrieve the FHIR CodeSystem for AYUSH systems. | None |
+| `GET` | `/ConceptMap` | Retrieve the FHIR ConceptMap linking AYUSH terms to ICD-11. | None |
+| `GET` | `/ConceptMap/$translate` | Translate a code to its ICD-11 equivalent. | `code` (required), `system` (required) |
 
 *Note: The Bundle endpoint requires a mock authentication token (configured in `utils/authMiddleware.js`).*
 
 ## 🛡️ Architecture & Data Persistence
 
 * **Separate Review Store (`data/mapping-reviews.json`)**: Administrator review metadata, approvals, flags, and audit history are isolated from `data/search-index.json` and `models/mappings.json`. Safe initialization and atomic write operations (`fs.renameSync`) guarantee that data is never lost or overwritten when running `npm run ingest`.
+* **Isolated Claims Review Store (`data/claims-review-requests.json`)**: Claims manual medical review requests are stored independently from raw terminology and admin mapping stores. Safe initialization and atomic writes ensure zero regressions to terminology or admin mappings.
+* **Separation of Lifecycles**: Claim review lifecycle states (`pending_review`, `under_review`, `resolved`, `closed`) remain completely independent from clinical mapping verification states (`pending_review`, `verified`, `flagged`). Resolving an insurance claim review does not alter raw source mappings.
+* **Duplicate Open Review Prevention**: The claims engine rejects duplicate review requests (HTTP 409 Conflict) for the same claim reference and concept code while an earlier request remains in an active review state.
+* **Statutory Compliance & Regulatory Notice**: The Claims Workbench enforces the AYUSH insurance guideline: missing WHO ICD-11 crosswalks do not justify automated claim rejection; processors are guided to route them directly to manual medical review.
 * **Stable Composite Keys**: Combines system and ID (e.g. `ayurveda-1`, `siddha-2`, `unani-1`) to prevent collision across traditions where numerical IDs overlap.
 * **Deterministic Version Fingerprinting**: Every verified mapping stores a SHA-256 fingerprint hash of its underlying data. If source CSV data or ICD-11 mappings change in a subsequent ingestion, stale verifications are automatically identified and flagged for re-review.
 
@@ -127,27 +155,36 @@ ayush-terminology-service/
 ├── controllers/
 │   ├── adminController.js         # Healthcare Administrator request handlers
 │   ├── bundleController.js        # FHIR Bundle processor & audit logger
+│   ├── claimsController.js        # Insurance Claims resolution, search & review requests
 │   └── terminologyController.js   # Terminology search, codeSystem, and ConceptMap
 ├── data/
 │   ├── audit-log.json             # Encounter & bundle audit trails
+│   ├── claims-review-requests.json# Persistent insurance claims manual review requests
 │   ├── mapping-reviews.json       # Persistent review governance & audit logs
 │   └── search-index.json          # Consolidated searchable index (generated)
 ├── models/
+│   ├── claimsStore.js             # Atomic persistence, deduplication & claims lifecycle store
 │   ├── mappings.json              # Curated ICD-11 TM2 / Biomedical mappings
 │   └── reviewStore.js             # Atomic persistence, fingerprinting & status engine
 ├── public/
 │   ├── admin.html                 # Healthcare Administrator Dashboard UI
 │   ├── api-playground.html        # Interactive API tester
+│   ├── claims.html                # Insurance Claims Processor Workbench UI
 │   ├── index.html                 # Clinician Terminology Search & Problem List UI
 │   ├── css/styles.css             # Unified modern styles & design system
 │   └── js/
-│       ├── admin.js               # Admin dashboard client logic
+│       ├── admin.js               # Admin dashboard & claims adjudication client logic
 │       ├── api-playground.js      # API playground client logic
+│       ├── claims.js              # Claims workbench client logic
 │       └── scripts.js             # Clinician UI client logic
 ├── routes/
 │   ├── adminRoutes.js             # /api/admin route definitions
 │   ├── bundleRoutes.js            # /api/fhir route definitions
+│   ├── claimsRoutes.js            # /api/claims route definitions
 │   └── terminologyRoutes.js       # /api/terminology route definitions
+├── scratch/
+│   ├── test-admin-endpoints.js    # Comprehensive administrator test suite
+│   └── test-claims-endpoints.js   # Comprehensive claims processor test suite
 ├── utils/
 │   ├── adminAuthMiddleware.js     # Dev-friendly admin auth middleware
 │   ├── authMiddleware.js          # Mock ABHA OAuth 2.0 token middleware

@@ -8,6 +8,7 @@ const terminologyService = require('./controllers/terminologyController');
 const terminologyRoutes = require('./routes/terminologyRoutes');
 const bundleRoutes = require('./routes/bundleRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const claimsRoutes = require('./routes/claimsRoutes');
 
 const app = express();
 app.use(cors());
@@ -30,6 +31,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/terminology', terminologyRoutes);
 app.use('/api/fhir', bundleRoutes); // FHIR-specific endpoints
 app.use('/api/admin', adminRoutes); // Healthcare Administrator endpoints
+app.use('/api/claims', claimsRoutes); // Insurance Claims Processor endpoints
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

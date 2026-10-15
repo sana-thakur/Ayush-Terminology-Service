@@ -11,6 +11,7 @@
     <a href="/" class="logo">FHDR <span>Terminology</span></a>
     <nav class="nav-links">
       <a href="/">Search UI</a>
+      <a href="/claims.html">Insurance Claims</a>
       <a href="/admin.html">Admin Dashboard</a>
       <a href="/api-playground.html" class="active">API Playground</a>
     </nav>
@@ -252,7 +253,94 @@
       </div>
     </div>
 
-    <!-- Endpoint 8: FHIR Resources -->
+    <!-- Endpoint 8: Claims Code Resolution -->
+    <div class="api-endpoint-card">
+      <div class="card-header"><h3><span class="method">GET</span> /api/claims/resolve</h3></div>
+      <div class="card-body">
+        <p>Resolve an exact tradition code into its WHO ICD-11 dual-coding crosswalk and adjudication outcome.</p>
+        <div class="param-group">
+          <label for="claimsResolveSystem">Tradition (system)</label>
+          <input type="text" id="claimsResolveSystem" value="Siddha">
+        </div>
+        <div class="param-group">
+          <label for="claimsResolveCode">Code (code)</label>
+          <input type="text" id="claimsResolveCode" value="SID-002">
+        </div>
+        <button id="claimsResolveBtn" class="btn btn-primary">Send Request</button>
+        <div class="output-section" style="margin-top: 1.5rem;">
+          <h4 style="font-weight: 600;">cURL Command</h4>
+          <pre id="claimsResolveCurl" style="margin-top: 0.5rem;"><code></code></pre>
+          <h4 style="font-weight: 600; margin-top: 1rem;">Response</h4>
+          <pre id="claimsResolveResponse" style="margin-top: 0.5rem;"><code></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Endpoint 9: Claims Review Request Creation -->
+    <div class="api-endpoint-card">
+      <div class="card-header"><h3><span class="method">POST</span> /api/claims/review-requests</h3></div>
+      <div class="card-body">
+        <p>Submit a manual medical review request for an unmapped or flagged claim diagnosis. Enforces deduplication.</p>
+        <div class="param-group">
+          <label for="claimsReqRef">Claim Reference</label>
+          <input type="text" id="claimsReqRef" value="CLM-2026-98104">
+        </div>
+        <div class="param-group">
+          <label for="claimsReqSystem">Tradition (system)</label>
+          <input type="text" id="claimsReqSystem" value="Ayurveda">
+        </div>
+        <div class="param-group">
+          <label for="claimsReqRecordId">Record ID</label>
+          <input type="text" id="claimsReqRecordId" value="1">
+        </div>
+        <div class="param-group">
+          <label for="claimsReqCode">Code</label>
+          <input type="text" id="claimsReqCode" value="AYU-001">
+        </div>
+        <div class="param-group">
+          <label for="claimsReqReason">Reason Category</label>
+          <select id="claimsReqReason" class="filter-select">
+            <option value="tm2_mapping_missing">tm2_mapping_missing</option>
+            <option value="biomedical_missing">biomedical_missing</option>
+            <option value="inconsistent_mapping">inconsistent_mapping</option>
+            <option value="flagged_by_admin">flagged_by_admin</option>
+            <option value="other">other</option>
+          </select>
+        </div>
+        <div class="param-group">
+          <label for="claimsReqNotes">Notes</label>
+          <input type="text" id="claimsReqNotes" value="Amavata diagnosis submitted without WHO TM2 crosswalk; request medical adjudication">
+        </div>
+        <button id="claimsSubmitReqBtn" class="btn btn-primary">Send Request</button>
+        <div class="output-section" style="margin-top: 1.5rem;">
+          <h4 style="font-weight: 600;">cURL Command</h4>
+          <pre id="claimsSubmitReqCurl" style="margin-top: 0.5rem;"><code></code></pre>
+          <h4 style="font-weight: 600; margin-top: 1rem;">Response</h4>
+          <pre id="claimsSubmitReqResponse" style="margin-top: 0.5rem;"><code></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Endpoint 10: Admin Inspect Claims Reviews -->
+    <div class="api-endpoint-card">
+      <div class="card-header"><h3><span class="method">GET</span> /api/admin/claims-review-requests</h3></div>
+      <div class="card-body">
+        <p>List and inspect pending claims manual medical review requests. Requires admin auth.</p>
+        <div class="param-group">
+          <label for="adminClaimsToken">Admin Bearer Token</label>
+          <input type="text" id="adminClaimsToken" value="Bearer admin-secret-dev-token-2026">
+        </div>
+        <button id="adminClaimsListBtn" class="btn btn-primary">Send Request</button>
+        <div class="output-section" style="margin-top: 1.5rem;">
+          <h4 style="font-weight: 600;">cURL Command</h4>
+          <pre id="adminClaimsListCurl" style="margin-top: 0.5rem;"><code></code></pre>
+          <h4 style="font-weight: 600; margin-top: 1rem;">Response</h4>
+          <pre id="adminClaimsListResponse" style="margin-top: 0.5rem;"><code></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Endpoint 11: FHIR Resources -->
     <div class="api-endpoint-card">
       <div class="card-header"><h3><span class="method">GET</span> FHIR Terminology Resources</h3></div>
       <div class="card-body">
@@ -261,6 +349,7 @@
           <li><a href="/api/terminology/CodeSystem" target="_blank">/api/terminology/CodeSystem</a></li>
           <li><a href="/api/terminology/ConceptMap" target="_blank">/api/terminology/ConceptMap</a></li>
           <li><a href="/api/admin/stats" target="_blank">/api/admin/stats (Requires Admin Auth)</a></li>
+          <li><a href="/api/admin/claims-review-requests" target="_blank">/api/admin/claims-review-requests (Requires Admin Auth)</a></li>
         </ul>
       </div>
     </div>

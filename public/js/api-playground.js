@@ -223,4 +223,80 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // --- Claims Resolve Endpoint Logic ---
+    const claimsResolveBtn = document.getElementById('claimsResolveBtn');
+    if (claimsResolveBtn) {
+        claimsResolveBtn.addEventListener('click', async () => {
+            const system = document.getElementById('claimsResolveSystem').value.trim();
+            const code = document.getElementById('claimsResolveCode').value.trim();
+            const url = `${window.location.origin}/api/claims/resolve?system=${encodeURIComponent(system)}&code=${encodeURIComponent(code)}`;
+
+            const curlCommand = `curl -X GET "${url}"`;
+            displayResult('claimsResolveCurl', curlCommand, false);
+            displayResult('claimsResolveResponse', { message: "Loading..." });
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                displayResult('claimsResolveResponse', data);
+            } catch (e) {
+                displayResult('claimsResolveResponse', { error: e.message });
+            }
+        });
+    }
+
+    // --- Claims Review Request Endpoint Logic ---
+    const claimsSubmitReqBtn = document.getElementById('claimsSubmitReqBtn');
+    if (claimsSubmitReqBtn) {
+        claimsSubmitReqBtn.addEventListener('click', async () => {
+            const claimReference = document.getElementById('claimsReqRef').value.trim();
+            const system = document.getElementById('claimsReqSystem').value.trim();
+            const recordId = document.getElementById('claimsReqRecordId').value.trim();
+            const code = document.getElementById('claimsReqCode').value.trim();
+            const reason = document.getElementById('claimsReqReason').value;
+            const notes = document.getElementById('claimsReqNotes').value.trim();
+            const url = `${window.location.origin}/api/claims/review-requests`;
+
+            const payload = { claimReference, system, recordId, code, reason, notes, requestedBy: "claims_processor" };
+            const curlCommand = `curl -X POST "${url}" \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(payload)}'`;
+            displayResult('claimsSubmitReqCurl', curlCommand, false);
+            displayResult('claimsSubmitReqResponse', { message: "Loading..." });
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                displayResult('claimsSubmitReqResponse', data);
+            } catch (e) {
+                displayResult('claimsSubmitReqResponse', { error: e.message });
+            }
+        });
+    }
+
+    // --- Admin Claims List Endpoint Logic ---
+    const adminClaimsListBtn = document.getElementById('adminClaimsListBtn');
+    if (adminClaimsListBtn) {
+        adminClaimsListBtn.addEventListener('click', async () => {
+            const token = document.getElementById('adminClaimsToken').value.trim();
+            const url = `${window.location.origin}/api/admin/claims-review-requests`;
+
+            const curlCommand = `curl -X GET "${url}" \\\n  -H "Authorization: ${token}"`;
+            displayResult('adminClaimsListCurl', curlCommand, false);
+            displayResult('adminClaimsListResponse', { message: "Loading..." });
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Authorization': token }
+                });
+                const data = await res.json();
+                displayResult('adminClaimsListResponse', data);
+            } catch (e) {
+                displayResult('adminClaimsListResponse', { error: e.message });
+            }
+        });
+    }
 });
